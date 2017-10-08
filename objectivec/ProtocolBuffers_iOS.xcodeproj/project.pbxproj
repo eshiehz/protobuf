@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1084A9CE1F86C29D00D126F0 /* GPBArray2.h in Headers */ = {isa = PBXBuildFile; fileRef = 1084A9CC1F86C29D00D126F0 /* GPBArray2.h */; };
+		1084A9DD1F884A1400D126F0 /* GPBArray2.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.mm */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
@@ -56,7 +58,6 @@
 		F43C88D0191D77FC009E917D /* text_format_unittest_data.txt in Resources */ = {isa = PBXBuildFile; fileRef = F43C88CF191D77FC009E917D /* text_format_unittest_data.txt */; };
 		F4487C6A1A9F8F8100531423 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		F4487C6F1A9F8FFF00531423 /* GPBProtocolBuffers.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BCF338814ED799900BC5317 /* GPBProtocolBuffers.m */; };
-		F4487C731A9F906200531423 /* GPBArray.m in Sources */ = {isa = PBXBuildFile; fileRef = F4487C711A9F906200531423 /* GPBArray.m */; };
 		F4487C771AADF84900531423 /* GPBMessageTests+Runtime.m in Sources */ = {isa = PBXBuildFile; fileRef = F4487C761AADF84900531423 /* GPBMessageTests+Runtime.m */; };
 		F4487C811AAF62FC00531423 /* GPBMessageTests+Serialization.m in Sources */ = {isa = PBXBuildFile; fileRef = F4487C801AAF62FC00531423 /* GPBMessageTests+Serialization.m */; };
 		F4487C851AAF6AC500531423 /* GPBMessageTests+Merge.m in Sources */ = {isa = PBXBuildFile; fileRef = F4487C841AAF6AC500531423 /* GPBMessageTests+Merge.m */; };
@@ -103,6 +104,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1084A9CB1F86C29D00D126F0 /* GPBArray2.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GPBArray2.mm; sourceTree = "<group>"; };
+		1084A9CC1F86C29D00D126F0 /* GPBArray2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPBArray2.h; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GPBConcurrencyTests.m; sourceTree = "<group>"; };
 		51457B5F18D0B7AF00CCC606 /* GPBCodedInputStream_PackagePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GPBCodedInputStream_PackagePrivate.h; sourceTree = "<group>"; };
@@ -518,6 +521,8 @@
 				7461B4E60F94F99000A0C422 /* GPBUtilities.m */,
 				8B4248E11A929C8900BC1EC6 /* GPBWellKnownTypes.h */,
 				8B4248E21A929C8900BC1EC6 /* GPBWellKnownTypes.m */,
+				1084A9CB1F86C29D00D126F0 /* GPBArray2.mm */,
+				1084A9CC1F86C29D00D126F0 /* GPBArray2.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -529,6 +534,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1084A9CE1F86C29D00D126F0 /* GPBArray2.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -718,8 +724,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */,
+				1084A9DD1F884A1400D126F0 /* GPBArray2.mm in Sources */,
 				F4E675D21B21D1620054530B /* Empty.pbobjc.m in Sources */,
-				F4487C731A9F906200531423 /* GPBArray.m in Sources */,
 				7461B53D0F94FB4E00A0C422 /* GPBCodedOutputStream.m in Sources */,
 				7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */,
 				F4E675D31B21D1620054530B /* FieldMask.pbobjc.m in Sources */,
@@ -831,6 +837,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				LLVM_LTO = YES;
 				PRODUCT_NAME = ProtocolBuffers;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -840,6 +847,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				LLVM_LTO = YES;
 				PRODUCT_NAME = ProtocolBuffers;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -895,6 +903,7 @@
 					"$(inherited)",
 					"\"$(DEVELOPER_DIR)/usr/lib\"",
 				);
+				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = UnitTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Tests/UnitTests-Bridging-Header.h";
@@ -931,6 +940,7 @@
 					"$(inherited)",
 					"\"$(DEVELOPER_DIR)/usr/lib\"",
 				);
+				LLVM_LTO = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = UnitTests;
 				SWIFT_OBJC_BRIDGING_HEADER = "Tests/UnitTests-Bridging-Header.h";

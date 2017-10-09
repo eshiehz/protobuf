@@ -23,95 +23,75 @@ static BOOL ArrayDefault_IsValidValue(int32_t value) {
   return (value != kGPBUnrecognizedEnumeratorValue);
 }
 
+typedef struct GPBContext {
+    char *_values;
+    NSUInteger _count;
+    NSUInteger _capacity;
+    unsigned int _valueSize;
+} GPBContext;
 
-template <typename T>
-class GPBArrayHelper {
-public:
-  T *_values;
-  NSUInteger _count;
-  NSUInteger _capacity;
-  
-public:
-  static id array(Class cls);
-  GPBArrayHelper();
-  ~GPBArrayHelper();
-  id initWithValues(id self,const T values[],NSUInteger count);
-  void internalResizeToCapacity(NSUInteger capacity);
-  BOOL isEqual(const GPBArrayHelper<T> &obj);
-  NSString * description(id obj);
-  void enumerateValuesWithOptions(NSEnumerationOptions opts,
-                                  void (^block)(T value, NSUInteger idx, BOOL *stop));
-  T valueAtIndex(NSUInteger index);
-  void addValues(const T values[],NSUInteger count);
-  void insertValue(T value,NSUInteger index);
-  void replaceValueAtIndex(NSUInteger index,T value);
-  void removeValueAtIndex(NSUInteger index);
-  void removeAll();
-  void exchangeValueAtIndex(NSUInteger idx1,NSUInteger idx2);
-};
 
-template <typename T>
-class GPBArrayEnumHelper : public GPBArrayHelper<T> {
-public:
-  GPBEnumValidationFunc _validationFunc;
-  
-public:
-  
-};
+/*
+static id initWithValues(id self,GPBContext *context, const char * values,NSUInteger count);
+static void internalResizeToCapacity(GPBContext *context,NSUInteger capacity);
+static BOOL isEqual(GPBContext *context,const GPBContext *obj);
+static NSString * description(GPBContext *context,id obj);
+static void enumerateValuesWithOptions(GPBContext *context,NSEnumerationOptions opts,
+                              void (^block)(const char * value, NSUInteger idx, BOOL *stop));
+static void valueAtIndex(GPBContext *context,NSUInteger index,char *buffer);
+static void addValues(GPBContext *context,const char * values,NSUInteger count);
+static void insertValue(GPBContext *context,const char * valuePtr,NSUInteger index);
+static void replaceValueAtIndex(GPBContext *context,NSUInteger index,const char * valuePtr);
+static void removeValueAtIndex(GPBContext *context,NSUInteger index);
+static void removeAll(GPBContext *context,);
+static void exchangeValueAtIndex(GPBContext *context,NSUInteger idx1,NSUInteger idx2);
 
-template <typename T> id GPBArrayHelper<T>::array(Class cls) {
+*/
+
+static id GPBArrayHelper_array(Class cls) {
   return [[cls alloc] init];
 }
 
-template<typename T> GPBArrayHelper<T>::GPBArrayHelper():_values(NULL),_count(0),_capacity(0) {
-}
-
-template<typename T> GPBArrayHelper<T>::~GPBArrayHelper() {
-  if (_values) {
-    free(_values);
-  }
-}
-
-template<typename T> id GPBArrayHelper<T>::initWithValues(id self,const T values[],
+static id GPBArrayHelper_initWithValues(GPBContext *context, id self,const char * values,
                                                           NSUInteger count) {
   if (self) {
     if (count && values) {
-      _values = (T *)reallocf(_values, count * sizeof(T));
-      if (_values != NULL) {
-        _capacity = count;
-        memcpy(_values, values, count * sizeof(T));
-        _count = count;
+      context->_values = (char *)reallocf(context->_values, count * context->_valueSize);
+      if (context->_values != NULL) {
+        context->_capacity = count;
+        memcpy(context->_values, values, count * context->_valueSize);
+        context->_count = count;
       } else {
         [self release];
         [NSException raise:NSMallocException
                     format:@"Failed to allocate %lu bytes",
-         (unsigned long)(count * sizeof(T))];
+         (unsigned long)(count * context->_valueSize)];
       }
     }
   }
   return self;
 }
 
-template<typename T> void GPBArrayHelper<T>::internalResizeToCapacity(NSUInteger newCapacity) {
-  _values = (T *)reallocf(_values, newCapacity * sizeof(T));
-  if (_values == NULL) {
-    _capacity = 0;
-    _count = 0;
+static void GPBArrayHelper_internalResizeToCapacity(GPBContext *context, NSUInteger newCapacity) {
+  context->_values = (char *)reallocf(context->_values, newCapacity * context->_valueSize);
+  if (context->_values == NULL) {
+    context->_capacity = 0;
+    context->_count = 0;
     [NSException raise:NSMallocException
                 format:@"Failed to allocate %lu bytes",
-     (unsigned long)(newCapacity * sizeof(T))];
+     (unsigned long)(newCapacity * context->_valueSize)];
   }
-  _capacity = newCapacity;
+  context->_capacity = newCapacity;
 }
 
-template<typename T> BOOL GPBArrayHelper<T>::isEqual(const GPBArrayHelper<T> &otherArray) {
+static BOOL GPBArrayHelper_isEqual(GPBContext *context, const GPBContext *otherArray) {
   
-  return (_count == otherArray._count
-          && memcmp(_values, otherArray._values, (_count * sizeof(T))) == 0);
+  return (context->_count == otherArray->_count
+          && context->_valueSize == otherArray->_valueSize && memcmp(context->_values, otherArray->_values, (context->_count * context->_valueSize)) == 0);
 }
-template<typename T> NSString * GPBArrayHelper<T>::description(id obj) {
+static NSString * GPBArrayHelper_description(GPBContext *context, id obj) {
   NSMutableString *result = [NSMutableString stringWithFormat:@"<%@ %p> { ", [obj class], obj];
-  for (NSUInteger i = 0, count = _count; i < count; ++i) {
+  for (NSUInteger i = 0, count = context->_count; i < count; ++i) {
     /*std::ostringstream output;
     output << _values[i];
     if (i == 0) {
@@ -125,116 +105,121 @@ template<typename T> NSString * GPBArrayHelper<T>::description(id obj) {
   return result;
 }
 
-template<typename T> void GPBArrayHelper<T>::enumerateValuesWithOptions(NSEnumerationOptions opts,
-  void (^block)(T value, NSUInteger idx, BOOL *stop)){
+static void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnumerationOptions opts,
+  void (^block)(const char *value, NSUInteger idx, BOOL *stop)){
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
   BOOL stop = NO;
   if ((opts & NSEnumerationReverse) == 0) {
-    for (NSUInteger i = 0, count = _count; i < count; ++i) {
-      block(_values[i], i, &stop);
+    for (NSUInteger i = 0, count = context->_count; i < count; ++i) {
+      block(context->_values + context->_valueSize * i, i, &stop);
       if (stop) break;
     }
-  } else if (_count > 0) {
-    for (NSUInteger i = _count; i > 0; --i) {
-      block(_values[i - 1], (i - 1), &stop);
+  } else if (context->_count > 0) {
+    for (NSUInteger i = context->_count; i > 0; --i) {
+      block(context->_values + context->_valueSize * (i - 1), (i - 1), &stop);
       if (stop) break;
     }
   }
 }
-template<typename T> T GPBArrayHelper<T>::valueAtIndex(NSUInteger index){
-  if (index >= _count) {
+static void GPBArrayHelper_valueAtIndex(GPBContext *context, NSUInteger index,char * buffer){
+  if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
+     (unsigned long)index, (unsigned long)context->_count];
   }
-  return _values[index];
+  memmove(buffer,context->_values + context->_valueSize * index,context->_valueSize);
 }
 
-template<typename T> void GPBArrayHelper<T>::addValues(const T values[],NSUInteger count) {
+static void GPBArrayHelper_addValues(GPBContext *context, const char * values,NSUInteger count) {
   if (values == NULL || count == 0) return;
-  NSUInteger initialCount = _count;
+  NSUInteger initialCount = context->_count;
   NSUInteger newCount = initialCount + count;
-  if (newCount > _capacity) {
-    internalResizeToCapacity(CapacityFromCount(newCount));
+  if (newCount > context->_capacity) {
+    GPBArrayHelper_internalResizeToCapacity(context,CapacityFromCount(newCount));
   }
-  _count = newCount;
-  memcpy(&_values[initialCount], values, count * sizeof(T));
+  context->_count = newCount;
+  memcpy(&context->_values[initialCount * context->_valueSize], values, count * context->_valueSize);
 }
-template<typename T> void GPBArrayHelper<T>::insertValue(T value,NSUInteger index) {
-  if (index >= _count + 1) {
+static void GPBArrayHelper_insertValue(GPBContext *context, const char * value,NSUInteger index) {
+  if (index >= context->_count + 1) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count + 1];
+     (unsigned long)index, (unsigned long)context->_count + 1];
   }
-  NSUInteger initialCount = _count;
+  NSUInteger initialCount = context->_count;
   NSUInteger newCount = initialCount + 1;
-  if (newCount > _capacity) {
-    internalResizeToCapacity(CapacityFromCount(newCount));
+  if (newCount > context->_capacity) {
+    GPBArrayHelper_internalResizeToCapacity(context,CapacityFromCount(newCount));
   }
-  _count = newCount;
+  context->_count = newCount;
   if (index != initialCount) {
-    memmove(&_values[index + 1], &_values[index], (initialCount - index) * sizeof(T));
+    memmove(&context->_values[(index + 1) * context->_valueSize], &context->_values[index * context->_valueSize], (initialCount - index) * context->_valueSize);
   }
-  _values[index] = value;
+  memmove(context->_values + index * context->_valueSize,value,context->_valueSize);
 }
 
-template<typename T> void GPBArrayHelper<T>::replaceValueAtIndex(NSUInteger index,T value) {
-  if (index >= _count) {
+static void GPBArrayHelper_replaceValueAtIndex(GPBContext *context, NSUInteger index,const char *value) {
+  if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
+     (unsigned long)index, (unsigned long)context->_count];
   }
-  _values[index] = value;
+  //_values[index] = value;
+    memmove(context->_values + index * context->_valueSize, value, context->_valueSize);
 }
 
-template<typename T> void GPBArrayHelper<T>::removeValueAtIndex(NSUInteger index) {
-  if (index >= _count) {
+static void GPBArrayHelper_removeValueAtIndex(GPBContext *context, NSUInteger index) {
+  if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
+     (unsigned long)index, (unsigned long)context->_count];
   }
-  NSUInteger newCount = _count - 1;
+  NSUInteger newCount = context->_count - 1;
   if (index != newCount) {
-    memmove(&_values[index], &_values[index + 1], (newCount - index) * sizeof(T));
+    memmove(&context->_values[index * context->_valueSize], &context->_values[(index + 1) * context->_valueSize], (newCount - index) * context->_valueSize);
   }
-  _count = newCount;
-  if ((newCount + (2 * kChunkSize)) < _capacity) {
-    internalResizeToCapacity(CapacityFromCount(newCount));
+  context->_count = newCount;
+  if ((newCount + (2 * kChunkSize)) < context->_capacity) {
+    GPBArrayHelper_internalResizeToCapacity(context,CapacityFromCount(newCount));
   }
 }
 
-template<typename T> void GPBArrayHelper<T>::removeAll() {
-  _count = 0;
-  if ((0 + (2 * kChunkSize)) < _capacity) {
-    internalResizeToCapacity(CapacityFromCount(0));
+static void GPBArrayHelper_removeAll(GPBContext *context) {
+  context->_count = 0;
+  if ((0 + (2 * kChunkSize)) < context->_capacity) {
+    GPBArrayHelper_internalResizeToCapacity(context,CapacityFromCount(0));
   }
 }
-template<typename T> void GPBArrayHelper<T>::exchangeValueAtIndex(NSUInteger idx1,NSUInteger idx2){
-  if (idx1 >= _count) {
+static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger idx1,NSUInteger idx2){
+  if (idx1 >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)idx1, (unsigned long)_count];
+     (unsigned long)idx1, (unsigned long)context->_count];
   }
-  if (idx2 >= _count) {
+  if (idx2 >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)idx2, (unsigned long)_count];
+     (unsigned long)idx2, (unsigned long)context->_count];
   }
-  T temp = _values[idx1];
-  _values[idx1] = _values[idx2];
-  _values[idx2] = temp;
+    char * temp = (char *)malloc(context->_valueSize);
+    memcpy(temp,context->_values + idx1 * context->_valueSize,context->_valueSize);
+    memcpy(context->_values + context->_valueSize * idx1, context->_values + context->_valueSize * idx2, context->_valueSize);
+    memcpy(context->_values + context->_valueSize * idx2, temp,context->_valueSize);
+    free(temp);
+  //_values[idx1] = _values[idx2];
+  //_values[idx2] = temp;
 }
 //%PDDM-DEFINE DEFINE_ARRAY(LABEL,TYPE,STORAGE)
 //%static_assert(sizeof(TYPE) == sizeof(STORAGE),"sizes do not match");
 //%@implementation GPB##LABEL##Array {
 //%  @package
-//%  GPBArrayHelper<STORAGE> _helper;
+//%  GPBContext _context;
 //%}
 //%- (NSUInteger)count {
-//%  return _helper._count;
+//%  return _context._count;
 //%}
 //%+ (instancetype)array {
-//%  return [GPBArrayHelper<STORAGE>::array(self) autorelease];
+//%  return [GPBArrayHelper_array(self) autorelease];
 //%}
 //%+ (instancetype)arrayWithValue:(TYPE)value {
 //%  return [[(GPB##LABEL##Array*)[self alloc] initWithValues:(TYPE *)&value count:1] autorelease];
@@ -247,33 +232,37 @@ template<typename T> void GPBArrayHelper<T>::exchangeValueAtIndex(NSUInteger idx
 //%}
 //%- (instancetype)init {
 //%  self = [super init];
+//%  if (self) {
+//%     _context._valueSize = sizeof(TYPE);
+//%  }
 //%  return self;
 //%}
 //%- (instancetype)initWithValueArray:(GPB##LABEL##Array *)array {
-//%  return [self initWithValues:(TYPE *)array->_helper._values count:array->_helper._count];
+//%  return [self initWithValues:(TYPE *)array->_context._values count:array->_context._count];
 //%}
 //%- (instancetype)initWithValues:(const TYPE[])values count:(NSUInteger)count {
 //%  self = [self init];
 //%  if (self) {
-//%    _helper.initWithValues(self,(STORAGE *)values,count);
+//%    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
 //%  }
 //%  return self;
 //%}
 //%- (instancetype)initWithCapacity:(NSUInteger)count {
 //%  self = [self initWithValues:NULL count:0];
 //%  if (self && count) {
-//%  _helper.internalResizeToCapacity(count);
+//%  GPBArrayHelper_internalResizeToCapacity(&_context,count);
 //%  }
 //%  return self;
 //%}
 //%- (instancetype)copyWithZone:(NSZone *)zone {
-//%  return [[GPB##LABEL##Array allocWithZone:zone] initWithValues:(TYPE *)self->_helper._values count:self->_helper._count];
+//%  return [[GPB##LABEL##Array allocWithZone:zone] initWithValues:(TYPE *)self->_context._values count:self->_context._count];
 //%}
 //%- (void)dealloc {
 //%  NSAssert2(!_autocreator,
 //%         @"%@: Autocreator must be cleared before release, autocreator: %@",
 //%         [self class], _autocreator);
-//%[super dealloc];
+//%  free(_context._values);
+//%  [super dealloc];
 //%}
 //%- (BOOL)isEqual:(id)other {
 //%  if (self == other) {
@@ -282,59 +271,63 @@ template<typename T> void GPBArrayHelper<T>::exchangeValueAtIndex(NSUInteger idx
 //%  if (![other isKindOfClass:[GPB##LABEL##Array class]]) {
 //%    return NO;
 //%  }
-//%  return _helper.isEqual(((GPB##LABEL##Array *)other)->_helper);
+//%  return GPBArrayHelper_isEqual(&_context,&((GPB##LABEL##Array *)other)->_context);
 //%}
 //%- (NSUInteger)hash {
 //%  // Follow NSArray's lead, and use the count as the hash.
-//%  return _helper._count;
+//%  return _context._count;
 //%}
 //%- (NSString *)description {
-//%  return _helper.description(self);
+//%  return GPBArrayHelper_description(&_context,self);
 //%}
 //%- (void)enumerateValuesWithBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block {
 //%  [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 //%}
 //%- (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
 //%  usingBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block {
-//%  void (^block2)(STORAGE value, NSUInteger idx, BOOL *stop) = ^(STORAGE value, NSUInteger idx, BOOL *stop) {
-//%    block((TYPE)value,idx,stop);
+//%  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+//%    TYPE temp;
+//%    memcpy(&temp,value,sizeof(TYPE));
+//%    block(temp,idx,stop);
 //%  };
-//%  _helper.enumerateValuesWithOptions(opts,block2);
+//%  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 //%}
 //%- (TYPE)valueAtIndex:(NSUInteger)index {
-//%  return (TYPE)_helper.valueAtIndex(index);
+//%   TYPE temp;
+//%   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+//%  return temp;
 //%}
 //%- (void)addValue:(TYPE)value {
 //%[self addValues:&value count:1];
 //%}
 //%- (void)addValues:(const TYPE [])values count:(NSUInteger)count {
-//%_helper.addValues((STORAGE *)values,count);
+//%  GPBArrayHelper_addValues(&_context,(char *)values,count);
 //%  if (_autocreator) {
 //%    GPBAutocreatedArrayModified(_autocreator, self);
 //%  }
 //%}
 //%- (void)insertValue:(TYPE)value atIndex:(NSUInteger)index {
-//%  _helper.insertValue((STORAGE)value,index);
+//%  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
 //%  if (_autocreator) {
 //%    GPBAutocreatedArrayModified(_autocreator, self);
 //%  }
 //%}
 //%
 //%- (void)replaceValueAtIndex:(NSUInteger)index withValue:(TYPE)value {
-//%  _helper.replaceValueAtIndex(index,(STORAGE)value);
+//%  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 //%}
 //%- (void)addValuesFromArray:(GPB##LABEL##Array *)array {
-//%  [self addValues:(TYPE *)array->_helper._values count:array->_helper._count];
+//%  [self addValues:(TYPE *)array->_context._values count:array->_context._count];
 //%}
 //%- (void)removeValueAtIndex:(NSUInteger)index {
-//%  _helper.removeValueAtIndex(index);
+//%  GPBArrayHelper_removeValueAtIndex(&_context,index);
 //%}
 //%- (void)removeAll {
-//%  _helper.removeAll();
+//%  GPBArrayHelper_removeAll(&_context);
 //%}
 //%- (void)exchangeValueAtIndex:(NSUInteger)idx1
 //%  withValueAtIndex:(NSUInteger)idx2 {
-//%    _helper.exchangeValueAtIndex(idx1,idx2);
+//%    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 //%}
 //%@end
 //%
@@ -346,13 +339,13 @@ template<typename T> void GPBArrayHelper<T>::exchangeValueAtIndex(NSUInteger idx
 static_assert(sizeof(int32_t) == sizeof(int32_t),"sizes do not match");
 @implementation GPBInt32Array {
   @package
-  GPBArrayHelper<int32_t> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<int32_t>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(int32_t)value {
   return [[(GPBInt32Array*)[self alloc] initWithValues:(int32_t *)&value count:1] autorelease];
@@ -365,33 +358,37 @@ static_assert(sizeof(int32_t) == sizeof(int32_t),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(int32_t);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBInt32Array *)array {
-  return [self initWithValues:(int32_t *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(int32_t *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const int32_t[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(int32_t *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBInt32Array allocWithZone:zone] initWithValues:(int32_t *)self->_helper._values count:self->_helper._count];
+  return [[GPBInt32Array allocWithZone:zone] initWithValues:(int32_t *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -400,59 +397,63 @@ static_assert(sizeof(int32_t) == sizeof(int32_t),"sizes do not match");
   if (![other isKindOfClass:[GPBInt32Array class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBInt32Array *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBInt32Array *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(int32_t value, NSUInteger idx, BOOL *stop) = ^(int32_t value, NSUInteger idx, BOOL *stop) {
-    block((int32_t)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    int32_t temp;
+    memcpy(&temp,value,sizeof(int32_t));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (int32_t)valueAtIndex:(NSUInteger)index {
-  return (int32_t)_helper.valueAtIndex(index);
+   int32_t temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(int32_t)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const int32_t [])values count:(NSUInteger)count {
-_helper.addValues((int32_t *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(int32_t)value atIndex:(NSUInteger)index {
-  _helper.insertValue((int32_t)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(int32_t)value {
-  _helper.replaceValueAtIndex(index,(int32_t)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBInt32Array *)array {
-  [self addValues:(int32_t *)array->_helper._values count:array->_helper._count];
+  [self addValues:(int32_t *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -462,13 +463,13 @@ _helper.addValues((int32_t *)values,count);
 static_assert(sizeof(BOOL) == sizeof(char),"sizes do not match");
 @implementation GPBBoolArray {
   @package
-  GPBArrayHelper<char> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<char>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(BOOL)value {
   return [[(GPBBoolArray*)[self alloc] initWithValues:(BOOL *)&value count:1] autorelease];
@@ -481,33 +482,37 @@ static_assert(sizeof(BOOL) == sizeof(char),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(BOOL);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBBoolArray *)array {
-  return [self initWithValues:(BOOL *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(BOOL *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const BOOL[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(char *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBBoolArray allocWithZone:zone] initWithValues:(BOOL *)self->_helper._values count:self->_helper._count];
+  return [[GPBBoolArray allocWithZone:zone] initWithValues:(BOOL *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -516,59 +521,63 @@ static_assert(sizeof(BOOL) == sizeof(char),"sizes do not match");
   if (![other isKindOfClass:[GPBBoolArray class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBBoolArray *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBBoolArray *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(char value, NSUInteger idx, BOOL *stop) = ^(char value, NSUInteger idx, BOOL *stop) {
-    block((BOOL)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    BOOL temp;
+    memcpy(&temp,value,sizeof(BOOL));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (BOOL)valueAtIndex:(NSUInteger)index {
-  return (BOOL)_helper.valueAtIndex(index);
+   BOOL temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(BOOL)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const BOOL [])values count:(NSUInteger)count {
-_helper.addValues((char *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(BOOL)value atIndex:(NSUInteger)index {
-  _helper.insertValue((char)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(BOOL)value {
-  _helper.replaceValueAtIndex(index,(char)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBBoolArray *)array {
-  [self addValues:(BOOL *)array->_helper._values count:array->_helper._count];
+  [self addValues:(BOOL *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -578,13 +587,13 @@ _helper.addValues((char *)values,count);
 static_assert(sizeof(double) == sizeof(double),"sizes do not match");
 @implementation GPBDoubleArray {
   @package
-  GPBArrayHelper<double> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<double>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(double)value {
   return [[(GPBDoubleArray*)[self alloc] initWithValues:(double *)&value count:1] autorelease];
@@ -597,33 +606,37 @@ static_assert(sizeof(double) == sizeof(double),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(double);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBDoubleArray *)array {
-  return [self initWithValues:(double *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(double *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const double[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(double *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBDoubleArray allocWithZone:zone] initWithValues:(double *)self->_helper._values count:self->_helper._count];
+  return [[GPBDoubleArray allocWithZone:zone] initWithValues:(double *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -632,59 +645,63 @@ static_assert(sizeof(double) == sizeof(double),"sizes do not match");
   if (![other isKindOfClass:[GPBDoubleArray class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBDoubleArray *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBDoubleArray *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(double value, NSUInteger idx, BOOL *stop) = ^(double value, NSUInteger idx, BOOL *stop) {
-    block((double)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    double temp;
+    memcpy(&temp,value,sizeof(double));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (double)valueAtIndex:(NSUInteger)index {
-  return (double)_helper.valueAtIndex(index);
+   double temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(double)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const double [])values count:(NSUInteger)count {
-_helper.addValues((double *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(double)value atIndex:(NSUInteger)index {
-  _helper.insertValue((double)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(double)value {
-  _helper.replaceValueAtIndex(index,(double)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBDoubleArray *)array {
-  [self addValues:(double *)array->_helper._values count:array->_helper._count];
+  [self addValues:(double *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -694,13 +711,13 @@ _helper.addValues((double *)values,count);
 static_assert(sizeof(float) == sizeof(float),"sizes do not match");
 @implementation GPBFloatArray {
   @package
-  GPBArrayHelper<float> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<float>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(float)value {
   return [[(GPBFloatArray*)[self alloc] initWithValues:(float *)&value count:1] autorelease];
@@ -713,33 +730,37 @@ static_assert(sizeof(float) == sizeof(float),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(float);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBFloatArray *)array {
-  return [self initWithValues:(float *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(float *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const float[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(float *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBFloatArray allocWithZone:zone] initWithValues:(float *)self->_helper._values count:self->_helper._count];
+  return [[GPBFloatArray allocWithZone:zone] initWithValues:(float *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -748,59 +769,63 @@ static_assert(sizeof(float) == sizeof(float),"sizes do not match");
   if (![other isKindOfClass:[GPBFloatArray class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBFloatArray *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBFloatArray *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(float value, NSUInteger idx, BOOL *stop) = ^(float value, NSUInteger idx, BOOL *stop) {
-    block((float)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    float temp;
+    memcpy(&temp,value,sizeof(float));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (float)valueAtIndex:(NSUInteger)index {
-  return (float)_helper.valueAtIndex(index);
+   float temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(float)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const float [])values count:(NSUInteger)count {
-_helper.addValues((float *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(float)value atIndex:(NSUInteger)index {
-  _helper.insertValue((float)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(float)value {
-  _helper.replaceValueAtIndex(index,(float)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBFloatArray *)array {
-  [self addValues:(float *)array->_helper._values count:array->_helper._count];
+  [self addValues:(float *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -810,13 +835,13 @@ _helper.addValues((float *)values,count);
 static_assert(sizeof(int64_t) == sizeof(int64_t),"sizes do not match");
 @implementation GPBInt64Array {
   @package
-  GPBArrayHelper<int64_t> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<int64_t>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(int64_t)value {
   return [[(GPBInt64Array*)[self alloc] initWithValues:(int64_t *)&value count:1] autorelease];
@@ -829,33 +854,37 @@ static_assert(sizeof(int64_t) == sizeof(int64_t),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(int64_t);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBInt64Array *)array {
-  return [self initWithValues:(int64_t *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(int64_t *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const int64_t[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(int64_t *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBInt64Array allocWithZone:zone] initWithValues:(int64_t *)self->_helper._values count:self->_helper._count];
+  return [[GPBInt64Array allocWithZone:zone] initWithValues:(int64_t *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -864,59 +893,63 @@ static_assert(sizeof(int64_t) == sizeof(int64_t),"sizes do not match");
   if (![other isKindOfClass:[GPBInt64Array class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBInt64Array *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBInt64Array *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(int64_t value, NSUInteger idx, BOOL *stop) = ^(int64_t value, NSUInteger idx, BOOL *stop) {
-    block((int64_t)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    int64_t temp;
+    memcpy(&temp,value,sizeof(int64_t));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (int64_t)valueAtIndex:(NSUInteger)index {
-  return (int64_t)_helper.valueAtIndex(index);
+   int64_t temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(int64_t)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const int64_t [])values count:(NSUInteger)count {
-_helper.addValues((int64_t *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(int64_t)value atIndex:(NSUInteger)index {
-  _helper.insertValue((int64_t)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(int64_t)value {
-  _helper.replaceValueAtIndex(index,(int64_t)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBInt64Array *)array {
-  [self addValues:(int64_t *)array->_helper._values count:array->_helper._count];
+  [self addValues:(int64_t *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -926,13 +959,13 @@ _helper.addValues((int64_t *)values,count);
 static_assert(sizeof(uint32_t) == sizeof(int32_t),"sizes do not match");
 @implementation GPBUInt32Array {
   @package
-  GPBArrayHelper<int32_t> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<int32_t>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(uint32_t)value {
   return [[(GPBUInt32Array*)[self alloc] initWithValues:(uint32_t *)&value count:1] autorelease];
@@ -945,33 +978,37 @@ static_assert(sizeof(uint32_t) == sizeof(int32_t),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(uint32_t);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBUInt32Array *)array {
-  return [self initWithValues:(uint32_t *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(uint32_t *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const uint32_t[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(int32_t *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBUInt32Array allocWithZone:zone] initWithValues:(uint32_t *)self->_helper._values count:self->_helper._count];
+  return [[GPBUInt32Array allocWithZone:zone] initWithValues:(uint32_t *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -980,59 +1017,63 @@ static_assert(sizeof(uint32_t) == sizeof(int32_t),"sizes do not match");
   if (![other isKindOfClass:[GPBUInt32Array class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBUInt32Array *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBUInt32Array *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(int32_t value, NSUInteger idx, BOOL *stop) = ^(int32_t value, NSUInteger idx, BOOL *stop) {
-    block((uint32_t)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    uint32_t temp;
+    memcpy(&temp,value,sizeof(uint32_t));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (uint32_t)valueAtIndex:(NSUInteger)index {
-  return (uint32_t)_helper.valueAtIndex(index);
+   uint32_t temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(uint32_t)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const uint32_t [])values count:(NSUInteger)count {
-_helper.addValues((int32_t *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(uint32_t)value atIndex:(NSUInteger)index {
-  _helper.insertValue((int32_t)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(uint32_t)value {
-  _helper.replaceValueAtIndex(index,(int32_t)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBUInt32Array *)array {
-  [self addValues:(uint32_t *)array->_helper._values count:array->_helper._count];
+  [self addValues:(uint32_t *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -1042,13 +1083,13 @@ _helper.addValues((int32_t *)values,count);
 static_assert(sizeof(uint64_t) == sizeof(int64_t),"sizes do not match");
 @implementation GPBUInt64Array {
   @package
-  GPBArrayHelper<int64_t> _helper;
+  GPBContext _context;
 }
 - (NSUInteger)count {
-  return _helper._count;
+  return _context._count;
 }
 + (instancetype)array {
-  return [GPBArrayHelper<int64_t>::array(self) autorelease];
+  return [GPBArrayHelper_array(self) autorelease];
 }
 + (instancetype)arrayWithValue:(uint64_t)value {
   return [[(GPBUInt64Array*)[self alloc] initWithValues:(uint64_t *)&value count:1] autorelease];
@@ -1061,33 +1102,37 @@ static_assert(sizeof(uint64_t) == sizeof(int64_t),"sizes do not match");
 }
 - (instancetype)init {
   self = [super init];
+  if (self) {
+     _context._valueSize = sizeof(uint64_t);
+  }
   return self;
 }
 - (instancetype)initWithValueArray:(GPBUInt64Array *)array {
-  return [self initWithValues:(uint64_t *)array->_helper._values count:array->_helper._count];
+  return [self initWithValues:(uint64_t *)array->_context._values count:array->_context._count];
 }
 - (instancetype)initWithValues:(const uint64_t[])values count:(NSUInteger)count {
   self = [self init];
   if (self) {
-    _helper.initWithValues(self,(int64_t *)values,count);
+    GPBArrayHelper_initWithValues(&_context,self,(char *)values,count);
   }
   return self;
 }
 - (instancetype)initWithCapacity:(NSUInteger)count {
   self = [self initWithValues:NULL count:0];
   if (self && count) {
-  _helper.internalResizeToCapacity(count);
+  GPBArrayHelper_internalResizeToCapacity(&_context,count);
   }
   return self;
 }
 - (instancetype)copyWithZone:(NSZone *)zone {
-  return [[GPBUInt64Array allocWithZone:zone] initWithValues:(uint64_t *)self->_helper._values count:self->_helper._count];
+  return [[GPBUInt64Array allocWithZone:zone] initWithValues:(uint64_t *)self->_context._values count:self->_context._count];
 }
 - (void)dealloc {
   NSAssert2(!_autocreator,
          @"%@: Autocreator must be cleared before release, autocreator: %@",
          [self class], _autocreator);
-[super dealloc];
+  free(_context._values);
+  [super dealloc];
 }
 - (BOOL)isEqual:(id)other {
   if (self == other) {
@@ -1096,59 +1141,63 @@ static_assert(sizeof(uint64_t) == sizeof(int64_t),"sizes do not match");
   if (![other isKindOfClass:[GPBUInt64Array class]]) {
     return NO;
   }
-  return _helper.isEqual(((GPBUInt64Array *)other)->_helper);
+  return GPBArrayHelper_isEqual(&_context,&((GPBUInt64Array *)other)->_context);
 }
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _helper._count;
+  return _context._count;
 }
 - (NSString *)description {
-  return _helper.description(self);
+  return GPBArrayHelper_description(&_context,self);
 }
 - (void)enumerateValuesWithBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(int64_t value, NSUInteger idx, BOOL *stop) = ^(int64_t value, NSUInteger idx, BOOL *stop) {
-    block((uint64_t)value,idx,stop);
+  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+    uint64_t temp;
+    memcpy(&temp,value,sizeof(uint64_t));
+    block(temp,idx,stop);
   };
-  _helper.enumerateValuesWithOptions(opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 - (uint64_t)valueAtIndex:(NSUInteger)index {
-  return (uint64_t)_helper.valueAtIndex(index);
+   uint64_t temp;
+   GPBArrayHelper_valueAtIndex(&_context,index,(char *)&temp);
+  return temp;
 }
 - (void)addValue:(uint64_t)value {
 [self addValues:&value count:1];
 }
 - (void)addValues:(const uint64_t [])values count:(NSUInteger)count {
-_helper.addValues((int64_t *)values,count);
+  GPBArrayHelper_addValues(&_context,(char *)values,count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 - (void)insertValue:(uint64_t)value atIndex:(NSUInteger)index {
-  _helper.insertValue((int64_t)value,index);
+  GPBArrayHelper_insertValue(&_context,(char *)&value,index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(uint64_t)value {
-  _helper.replaceValueAtIndex(index,(int64_t)value);
+  GPBArrayHelper_replaceValueAtIndex(&_context,index,(char *)&value);
 }
 - (void)addValuesFromArray:(GPBUInt64Array *)array {
-  [self addValues:(uint64_t *)array->_helper._values count:array->_helper._count];
+  [self addValues:(uint64_t *)array->_context._values count:array->_context._count];
 }
 - (void)removeValueAtIndex:(NSUInteger)index {
-  _helper.removeValueAtIndex(index);
+  GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 - (void)removeAll {
-  _helper.removeAll();
+  GPBArrayHelper_removeAll(&_context);
 }
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
   withValueAtIndex:(NSUInteger)idx2 {
-    _helper.exchangeValueAtIndex(idx1,idx2);
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1,idx2);
 }
 @end
 
@@ -1261,14 +1310,15 @@ _helper.addValues((int64_t *)values,count);
 
 @implementation GPBEnumArray {
   @package
+  GPBContext _context;
   GPBEnumValidationFunc _validationFunc;
-  int32_t *_values;
-  NSUInteger _count;
-  NSUInteger _capacity;
 }
 
-@synthesize count = _count;
 @synthesize validationFunc = _validationFunc;
+
+- (NSUInteger)count {
+    return _context._count;
+}
 
 + (instancetype)array {
   return [[[self alloc] initWithValidationFunction:NULL] autorelease];
@@ -1300,13 +1350,14 @@ _helper.addValues((int64_t *)values,count);
 
 - (instancetype)initWithValueArray:(GPBEnumArray *)array {
   return [self initWithValidationFunction:array->_validationFunc
-                                rawValues:array->_values
-                                    count:array->_count];
+                                rawValues:(int32_t *)array->_context._values
+                                    count:array->_context._count];
 }
 
 - (instancetype)initWithValidationFunction:(GPBEnumValidationFunc)func {
   self = [super init];
   if (self) {
+      _context._valueSize = sizeof(int32_t);
     _validationFunc = (func != NULL ? func : ArrayDefault_IsValidValue);
   }
   return self;
@@ -1317,19 +1368,7 @@ _helper.addValues((int64_t *)values,count);
                                      count:(NSUInteger)count {
   self = [self initWithValidationFunction:func];
   if (self) {
-    if (count && values) {
-      _values = (int32_t *)reallocf(_values, count * sizeof(int32_t));
-      if (_values != NULL) {
-        _capacity = count;
-        memcpy(_values, values, count * sizeof(int32_t));
-        _count = count;
-      } else {
-        [self release];
-        [NSException raise:NSMallocException
-                    format:@"Failed to allocate %lu bytes",
-         (unsigned long)(count * sizeof(int32_t))];
-      }
-    }
+      GPBArrayHelper_initWithValues(&_context,self, (char *)values, count);
   }
   return self;
 }
@@ -1346,8 +1385,8 @@ _helper.addValues((int64_t *)values,count);
 - (instancetype)copyWithZone:(NSZone *)zone {
   return [[GPBEnumArray allocWithZone:zone]
           initWithValidationFunction:_validationFunc
-          rawValues:_values
-          count:_count];
+          rawValues:(int32_t *)_context._values
+          count:_context._count];
 }
 
 
@@ -1355,38 +1394,28 @@ _helper.addValues((int64_t *)values,count);
   NSAssert2(!_autocreator,
            @"%@: Autocreator must be cleared before release, autocreator: %@",
            [self class], _autocreator);
-  free(_values);
+    free(_context._values);
   [super dealloc];
 }
 
 - (BOOL)isEqual:(id)other {
+    
   if (self == other) {
     return YES;
   }
   if (![other isKindOfClass:[GPBEnumArray class]]) {
     return NO;
   }
-  GPBEnumArray *otherArray = other;
-  return (_count == otherArray->_count
-          && memcmp(_values, otherArray->_values, (_count * sizeof(int32_t))) == 0);
+    return GPBArrayHelper_isEqual(&_context,&((GPBEnumArray *)other)->_context);
 }
 
 - (NSUInteger)hash {
   // Follow NSArray's lead, and use the count as the hash.
-  return _count;
+    return _context._count;
 }
 
 - (NSString *)description {
-  NSMutableString *result = [NSMutableString stringWithFormat:@"<%@ %p> { ", [self class], self];
-  for (NSUInteger i = 0, count = _count; i < count; ++i) {
-    if (i == 0) {
-      [result appendFormat:@"%d", _values[i]];
-    } else {
-      [result appendFormat:@", %d", _values[i]];
-    }
-  }
-  [result appendFormat:@" }"];
-  return result;
+    return GPBArrayHelper_description(&_context,self);
 }
 
 - (void)enumerateRawValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
@@ -1396,28 +1425,17 @@ _helper.addValues((int64_t *)values,count);
 - (void)enumerateRawValuesWithOptions:(NSEnumerationOptions)opts
                            usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
-  BOOL stop = NO;
-  if ((opts & NSEnumerationReverse) == 0) {
-    for (NSUInteger i = 0, count = _count; i < count; ++i) {
-      block(_values[i], i, &stop);
-      if (stop) break;
-    }
-  } else if (_count > 0) {
-    for (NSUInteger i = _count; i > 0; --i) {
-      block(_values[i - 1], (i - 1), &stop);
-      if (stop) break;
-    }
-  }
+    void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+        int32_t temp;
+        memcpy(&temp,value,sizeof(uint64_t));
+        block(temp,idx,stop);
+    };
+   GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 
 - (int32_t)valueAtIndex:(NSUInteger)index {
-
-  if (index >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
-  }
-  int32_t result = _values[index];
+    int32_t result;
+    GPBArrayHelper_valueAtIndex(&_context,index, (char *)&result);
   if (!_validationFunc(result)) {
     result = kGPBUnrecognizedEnumeratorValue;
   }
@@ -1425,13 +1443,10 @@ _helper.addValues((int64_t *)values,count);
 }
 
 - (int32_t)rawValueAtIndex:(NSUInteger)index {
+    int32_t result;
+    GPBArrayHelper_valueAtIndex(&_context, index, (char *)&result);
 
-  if (index >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
-  }
-  return _values[index];
+    return result;
 }
 
 - (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
@@ -1441,44 +1456,20 @@ _helper.addValues((int64_t *)values,count);
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
                         usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
-  BOOL stop = NO;
-  GPBEnumValidationFunc func = _validationFunc;
-  if ((opts & NSEnumerationReverse) == 0) {
-    int32_t *scan = _values;
-    int32_t *end = scan + _count;
-    for (NSUInteger i = 0; scan < end; ++i, ++scan) {
-      int32_t value = *scan;
-      if (!func(value)) {
-        value = kGPBUnrecognizedEnumeratorValue;
-      }
-      block(value, i, &stop);
-      if (stop) break;
-    }
-  } else if (_count > 0) {
-    int32_t *end = _values;
-    int32_t *scan = end + (_count - 1);
-    for (NSUInteger i = (_count - 1); scan >= end; --i, --scan) {
-      int32_t value = *scan;
-      if (!func(value)) {
-        value = kGPBUnrecognizedEnumeratorValue;
-      }
-      block(value, i, &stop);
-      if (stop) break;
-    }
-  }
+    void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
+        int32_t temp;
+        memcpy(&temp,value,sizeof(temp));
+        if (!_validationFunc(temp)) {
+            temp = kGPBUnrecognizedEnumeratorValue;
+        }
+        block(temp,idx,stop);
+    };
+    GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
 }
 
 
 - (void)internalResizeToCapacity:(NSUInteger)newCapacity {
-  _values = (int32_t *)reallocf(_values, newCapacity * sizeof(int32_t));
-  if (_values == NULL) {
-    _capacity = 0;
-    _count = 0;
-    [NSException raise:NSMallocException
-                format:@"Failed to allocate %lu bytes",
-     (unsigned long)(newCapacity * sizeof(int32_t))];
-  }
-  _capacity = newCapacity;
+    GPBArrayHelper_internalResizeToCapacity(&_context,newCapacity);
 }
 
 - (void)addRawValue:(int32_t)value {
@@ -1486,91 +1477,38 @@ _helper.addValues((int64_t *)values,count);
 }
 
 - (void)addRawValues:(const int32_t [])values count:(NSUInteger)count {
-  if (values == NULL || count == 0) return;
-  NSUInteger initialCount = _count;
-  NSUInteger newCount = initialCount + count;
-  if (newCount > _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(newCount)];
-  }
-  _count = newCount;
-  memcpy(&_values[initialCount], values, count * sizeof(int32_t));
+    GPBArrayHelper_addValues(&_context,(char *)values, count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)insertRawValue:(int32_t)value atIndex:(NSUInteger)index {
-  if (index >= _count + 1) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count + 1];
-  }
-  NSUInteger initialCount = _count;
-  NSUInteger newCount = initialCount + 1;
-  if (newCount > _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(newCount)];
-  }
-  _count = newCount;
-  if (index != initialCount) {
-    memmove(&_values[index + 1], &_values[index], (initialCount - index) * sizeof(int32_t));
-  }
-  _values[index] = value;
+    GPBArrayHelper_insertValue(&_context,(char *)&value, index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withRawValue:(int32_t)value {
-  if (index >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
-  }
-  _values[index] = value;
+    GPBArrayHelper_replaceValueAtIndex(&_context,index, (char *)&value);
 }
 
 - (void)addRawValuesFromArray:(GPBEnumArray *)array {
-  [self addRawValues:array->_values count:array->_count];
+  [self addRawValues:(int32_t *)array->_context._values count:array->_context._count];
 }
 
 - (void)removeValueAtIndex:(NSUInteger)index {
-  if (index >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
-  }
-  NSUInteger newCount = _count - 1;
-  if (index != newCount) {
-    memmove(&_values[index], &_values[index + 1], (newCount - index) * sizeof(int32_t));
-  }
-  _count = newCount;
-  if ((newCount + (2 * kChunkSize)) < _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(newCount)];
-  }
+    GPBArrayHelper_removeValueAtIndex(&_context,index);
 }
 
 - (void)removeAll {
-  _count = 0;
-  if ((0 + (2 * kChunkSize)) < _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(0)];
-  }
+    GPBArrayHelper_removeAll(&_context);
 }
 
 - (void)exchangeValueAtIndex:(NSUInteger)idx1
             withValueAtIndex:(NSUInteger)idx2 {
-  if (idx1 >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)idx1, (unsigned long)_count];
-  }
-  if (idx2 >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)idx2, (unsigned long)_count];
-  }
-  int32_t temp = _values[idx1];
-  _values[idx1] = _values[idx2];
-  _values[idx2] = temp;
+    GPBArrayHelper_exchangeValueAtIndex(&_context,idx1, idx2);
 }
 
 - (void)addValue:(int32_t)value {
@@ -1587,56 +1525,33 @@ _helper.addValues((int64_t *)values,count);
        [self class], values[i]];
     }
   }
-  NSUInteger initialCount = _count;
-  NSUInteger newCount = initialCount + count;
-  if (newCount > _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(newCount)];
-  }
-  _count = newCount;
-  memcpy(&_values[initialCount], values, count * sizeof(int32_t));
+    GPBArrayHelper_addValues(&_context,(char *)values, count);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)insertValue:(int32_t)value atIndex:(NSUInteger)index {
-  if (index >= _count + 1) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count + 1];
-  }
+
   if (!_validationFunc(value)) {
     [NSException raise:NSInvalidArgumentException
                 format:@"%@: Attempt to set an unknown enum value (%d)",
      [self class], value];
   }
-  NSUInteger initialCount = _count;
-  NSUInteger newCount = initialCount + 1;
-  if (newCount > _capacity) {
-    [self internalResizeToCapacity:CapacityFromCount(newCount)];
-  }
-  _count = newCount;
-  if (index != initialCount) {
-    memmove(&_values[index + 1], &_values[index], (initialCount - index) * sizeof(int32_t));
-  }
-  _values[index] = value;
+    GPBArrayHelper_insertValue(&_context,(char *)&value, index);
   if (_autocreator) {
     GPBAutocreatedArrayModified(_autocreator, self);
   }
 }
 
 - (void)replaceValueAtIndex:(NSUInteger)index withValue:(int32_t)value {
-  if (index >= _count) {
-    [NSException raise:NSRangeException
-                format:@"Index (%lu) beyond bounds (%lu)",
-     (unsigned long)index, (unsigned long)_count];
-  }
+
   if (!_validationFunc(value)) {
     [NSException raise:NSInvalidArgumentException
                 format:@"%@: Attempt to set an unknown enum value (%d)",
      [self class], value];
   }
-  _values[index] = value;
+    GPBArrayHelper_replaceValueAtIndex(&_context, index, (char *)&value);
 }
 @end
 

@@ -11,7 +11,6 @@
 #import "GPBMessage_PackagePrivate.h"
 #include "GPBArray.h"
 #import <Foundation/Foundation.h>
-#include <sstream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdirect-ivar-access"
@@ -210,7 +209,6 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   //_values[idx2] = temp;
 }
 //%PDDM-DEFINE DEFINE_ARRAY(LABEL,TYPE,STORAGE)
-//%static_assert(sizeof(TYPE) == sizeof(STORAGE),"sizes do not match");
 //%@implementation GPB##LABEL##Array {
 //%  @package
 //%  GPBContext _context;
@@ -336,7 +334,6 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 //%PDDM-EXPAND DEFINE_ARRAY(Int32,int32_t,int32_t)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(int32_t) == sizeof(int32_t),"sizes do not match");
 @implementation GPBInt32Array {
   @package
   GPBContext _context;
@@ -460,7 +457,6 @@ static_assert(sizeof(int32_t) == sizeof(int32_t),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(Bool,BOOL,char)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(BOOL) == sizeof(char),"sizes do not match");
 @implementation GPBBoolArray {
   @package
   GPBContext _context;
@@ -584,7 +580,6 @@ static_assert(sizeof(BOOL) == sizeof(char),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(Double,double,double)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(double) == sizeof(double),"sizes do not match");
 @implementation GPBDoubleArray {
   @package
   GPBContext _context;
@@ -708,7 +703,6 @@ static_assert(sizeof(double) == sizeof(double),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(Float,float,float)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(float) == sizeof(float),"sizes do not match");
 @implementation GPBFloatArray {
   @package
   GPBContext _context;
@@ -832,7 +826,6 @@ static_assert(sizeof(float) == sizeof(float),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(Int64,int64_t,int64_t)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(int64_t) == sizeof(int64_t),"sizes do not match");
 @implementation GPBInt64Array {
   @package
   GPBContext _context;
@@ -956,7 +949,6 @@ static_assert(sizeof(int64_t) == sizeof(int64_t),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(UInt32,uint32_t,int32_t)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(uint32_t) == sizeof(int32_t),"sizes do not match");
 @implementation GPBUInt32Array {
   @package
   GPBContext _context;
@@ -1080,7 +1072,6 @@ static_assert(sizeof(uint32_t) == sizeof(int32_t),"sizes do not match");
 //%PDDM-EXPAND DEFINE_ARRAY(UInt64,uint64_t,int64_t)
 // This block of code is generated, do not edit it directly.
 
-static_assert(sizeof(uint64_t) == sizeof(int64_t),"sizes do not match");
 @implementation GPBUInt64Array {
   @package
   GPBContext _context;
@@ -1427,7 +1418,7 @@ static_assert(sizeof(uint64_t) == sizeof(int64_t),"sizes do not match");
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
     void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
         int32_t temp;
-        memcpy(&temp,value,sizeof(uint64_t));
+        memcpy(&temp,value,sizeof(int32_t));
         block(temp,idx,stop);
     };
    GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);

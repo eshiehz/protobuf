@@ -17,6 +17,7 @@
 		079156CF1F8B19630098C514 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 079156CD1F8B19630098C514 /* LaunchScreen.storyboard */; };
 		079156D41F8B19710098C514 /* libProtocolBuffers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7461B52E0F94FAF800A0C422 /* libProtocolBuffers.a */; };
 		079156DA1F8B1B910098C514 /* Conformance.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 079156D91F8B1B900098C514 /* Conformance.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		07FB2C361F8F225900EB0DBB /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
@@ -126,6 +127,7 @@
 		079156D71F8B1B900098C514 /* ProtobufApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ProtobufApp-Bridging-Header.h"; sourceTree = "<group>"; };
 		079156D81F8B1B900098C514 /* Conformance.pbobjc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Conformance.pbobjc.h; path = ../../conformance/Conformance.pbobjc.h; sourceTree = "<group>"; };
 		079156D91F8B1B900098C514 /* Conformance.pbobjc.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Conformance.pbobjc.m; path = ../../conformance/Conformance.pbobjc.m; sourceTree = "<group>"; };
+		07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GPBDictionary2.m; sourceTree = "<group>"; };
 		1084A9CB1F86C29D00D126F0 /* GPBArray2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPBArray2.m; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GPBConcurrencyTests.m; sourceTree = "<group>"; };
@@ -573,6 +575,7 @@
 				8B4248E11A929C8900BC1EC6 /* GPBWellKnownTypes.h */,
 				8B4248E21A929C8900BC1EC6 /* GPBWellKnownTypes.m */,
 				1084A9CB1F86C29D00D126F0 /* GPBArray2.m */,
+				07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -836,6 +839,7 @@
 				7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */,
 				7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */,
 				F4E675D11B21D1620054530B /* Api.pbobjc.m in Sources */,
+				07FB2C361F8F225900EB0DBB /* GPBDictionary2.m in Sources */,
 				F4E675D41B21D1620054530B /* SourceContext.pbobjc.m in Sources */,
 				F4353D271ABB156F005A6198 /* GPBDictionary.m in Sources */,
 				8B79657B14992E3F002FFBFC /* GPBRootObject.m in Sources */,

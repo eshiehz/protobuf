@@ -17,7 +17,7 @@
 		079156CF1F8B19630098C514 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 079156CD1F8B19630098C514 /* LaunchScreen.storyboard */; };
 		079156D41F8B19710098C514 /* libProtocolBuffers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7461B52E0F94FAF800A0C422 /* libProtocolBuffers.a */; };
 		079156DA1F8B1B910098C514 /* Conformance.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 079156D91F8B1B900098C514 /* Conformance.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		07FB2C361F8F225900EB0DBB /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
+		101F7BA01F90812C00058530 /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
@@ -57,7 +57,6 @@
 		F401DC351A8E5C6F00FCC765 /* GPBArrayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F401DC341A8E5C6F00FCC765 /* GPBArrayTests.m */; };
 		F41C175D1833D3310064ED4D /* GPBPerfTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F41C175C1833D3310064ED4D /* GPBPerfTests.m */; };
 		F4353D1F1AB88243005A6198 /* GPBDescriptorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F4353D1E1AB88243005A6198 /* GPBDescriptorTests.m */; };
-		F4353D271ABB156F005A6198 /* GPBDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = F4353D251ABB156F005A6198 /* GPBDictionary.m */; };
 		F4353D421AC06F31005A6198 /* GPBDictionaryTests+Bool.m in Sources */ = {isa = PBXBuildFile; fileRef = F4353D3B1AC06F31005A6198 /* GPBDictionaryTests+Bool.m */; };
 		F4353D431AC06F31005A6198 /* GPBDictionaryTests+Int32.m in Sources */ = {isa = PBXBuildFile; fileRef = F4353D3C1AC06F31005A6198 /* GPBDictionaryTests+Int32.m */; };
 		F4353D441AC06F31005A6198 /* GPBDictionaryTests+Int64.m in Sources */ = {isa = PBXBuildFile; fileRef = F4353D3D1AC06F31005A6198 /* GPBDictionaryTests+Int64.m */; };
@@ -830,6 +829,7 @@
 				07416BFE1F8B2DA700EDF341 /* GPBArray2.m in Sources */,
 				F4E675D21B21D1620054530B /* Empty.pbobjc.m in Sources */,
 				7461B53D0F94FB4E00A0C422 /* GPBCodedOutputStream.m in Sources */,
+				101F7BA01F90812C00058530 /* GPBDictionary2.m in Sources */,
 				7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */,
 				F4E675D31B21D1620054530B /* FieldMask.pbobjc.m in Sources */,
 				7461B54C0F94FB4E00A0C422 /* GPBUnknownField.m in Sources */,
@@ -839,9 +839,7 @@
 				7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */,
 				7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */,
 				F4E675D11B21D1620054530B /* Api.pbobjc.m in Sources */,
-				07FB2C361F8F225900EB0DBB /* GPBDictionary2.m in Sources */,
 				F4E675D41B21D1620054530B /* SourceContext.pbobjc.m in Sources */,
-				F4353D271ABB156F005A6198 /* GPBDictionary.m in Sources */,
 				8B79657B14992E3F002FFBFC /* GPBRootObject.m in Sources */,
 				8B96157414C8C38C00A2AC0B /* GPBDescriptor.m in Sources */,
 				F4E675D01B21D1620054530B /* Any.pbobjc.m in Sources */,

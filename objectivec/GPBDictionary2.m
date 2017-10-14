@@ -417,7 +417,27 @@ static void writeToCodedOutputStream(GPBCodedOutputStream *outputStream,GPBField
     writeSerializationType(outputStream,valueType,unwrappedValue,kMapValueFieldNumber,valueDataType);
   }
 }
-  
+static void writeBoolToCodedOutputStream(GPBCodedOutputStream *outputStream,GPBFieldDescriptor *field,
+                                         GPBType valueType,const void *values,const BOOL valueSet[]) {
+    GPBDataType valueDataType = GPBGetFieldDataType(field);
+    uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
+    for (int i = 0; i < 2; ++i) {
+      if ((valueSet && valueSet[i]) || (!valueSet && ((id *)values)[i])) {
+        // Write the tag.
+        [outputStream writeInt32NoTag:tag];
+        // Write the size of the message.
+        GPBUnwrappedValue unwrappedValue;
+        SafeUnwrapCopy(&unwrappedValue, valueType, values, i);
+        size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
+        msgSize += computeSerializationType(valueType,unwrappedValue,kMapValueFieldNumber, valueDataType);
+        [outputStream writeInt32NoTag:(int32_t)msgSize];
+        // Write the fields.
+        WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
+        writeSerializationType(outputStream,valueType,unwrappedValue,kMapValueFieldNumber,valueDataType);
+      }
+    }
+}
+
 //%PDDM-DEFINE SERIALIZE_SUPPORT_2_TYPE(VALUE_NAME, VALUE_TYPE, GPBDATATYPE_NAME1, GPBDATATYPE_NAME2)
 //%static size_t ComputeDict##VALUE_NAME##FieldSize(VALUE_TYPE value, uint32_t fieldNum, GPBDataType dataType) {
 //%  if (dataType == GPBDataType##GPBDATATYPE_NAME1) {
@@ -1391,21 +1411,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%
 //%- (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
 //%                         asField:(GPBFieldDescriptor *)field {
-//%  GPBDataType valueDataType = GPBGetFieldDataType(field);
-//%  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-//%  for (int i = 0; i < 2; ++i) {
-//%    if (BOOL_DICT_HAS##HELPER(i, )) {
-//%      // Write the tag.
-//%      [outputStream writeInt32NoTag:tag];
-//%      // Write the size of the message.
-//%      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-//%      msgSize += ComputeDict##VALUE_NAME##FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-//%      [outputStream writeInt32NoTag:(int32_t)msgSize];
-//%      // Write the fields.
-//%      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-//%      WriteDict##VALUE_NAME##Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-//%    }
-//%  }
+//%     writeBoolToCodedOutputStream(outputStream,field,GPB_##VALUE_NAME,_values,BOOL_DICT_STORAGE_VAR_##HELPER());
 //%}
 //%
 //%BOOL_DICT_MUTATIONS_##HELPER(VALUE_NAME, VALUE_TYPE)
@@ -1508,6 +1514,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%PDDM-DEFINE BOOL_DICT_HAS_STORAGE_POD()
 //%  BOOL _valueSet[2];
 //%
+//%PDDM-DEFINE BOOL_DICT_STORAGE_VAR_POD()
+//%_valueSet
 //%PDDM-DEFINE BOOL_DICT_INITS_POD(VALUE_NAME, VALUE_TYPE)
 //%- (instancetype)initWith##VALUE_NAME##s:(const VALUE_TYPE [])values
 //%                 ##VALUE_NAME$S## forKeys:(const BOOL [])keys
@@ -1712,6 +1720,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 //%PDDM-DEFINE BOOL_DICT_HAS_STORAGE_OBJECT()
 // Empty
+//%PDDM-DEFINE BOOL_DICT_STORAGE_VAR_OBJECT()
+//%NULL
 //%PDDM-DEFINE BOOL_DICT_INITS_OBJECT(VALUE_NAME, VALUE_TYPE)
 //%- (instancetype)initWithObjects:(const VALUE_TYPE [])objects
 //%                        forKeys:(const BOOL [])keys
@@ -9992,21 +10002,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictUInt32FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictUInt32Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_UInt32,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolUInt32Dictionary *)otherDictionary {
@@ -10221,21 +10217,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictInt32FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictInt32Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Int32,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolInt32Dictionary *)otherDictionary {
@@ -10450,21 +10432,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictUInt64FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictUInt64Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_UInt64,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolUInt64Dictionary *)otherDictionary {
@@ -10679,21 +10647,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictInt64FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictInt64Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Int64,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolInt64Dictionary *)otherDictionary {
@@ -10908,21 +10862,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictBoolFieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictBoolField(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Bool,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolBoolDictionary *)otherDictionary {
@@ -11137,21 +11077,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictFloatFieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictFloatField(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Float,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolFloatDictionary *)otherDictionary {
@@ -11366,21 +11292,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_valueSet[i]) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictDoubleFieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictDoubleField(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Double,_values,_valueSet);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolDoubleDictionary *)otherDictionary {
@@ -11608,21 +11520,7 @@ void GPBDictionaryReadEntry(id mapDictionary,
 
 - (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
                          asField:(GPBFieldDescriptor *)field {
-  GPBDataType valueDataType = GPBGetFieldDataType(field);
-  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
-  for (int i = 0; i < 2; ++i) {
-    if (_values[i] != nil) {
-      // Write the tag.
-      [outputStream writeInt32NoTag:tag];
-      // Write the size of the message.
-      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      msgSize += ComputeDictObjectFieldSize(_values[i], kMapValueFieldNumber, valueDataType);
-      [outputStream writeInt32NoTag:(int32_t)msgSize];
-      // Write the fields.
-      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
-      WriteDictObjectField(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
-    }
-  }
+     writeBoolToCodedOutputStream(outputStream,field,GPB_Object,_values,NULL);
 }
 
 - (void)addEntriesFromDictionary:(GPBBoolObjectDictionary *)otherDictionary {

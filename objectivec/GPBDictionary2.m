@@ -1087,13 +1087,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%                                     count:(NSUInteger)count {
 //%  self = [super init];
 //%  if (self) {
-//%    _dictionary = [[NSMutableDictionary alloc] init];
+//%    _dictionary = copyWrappedValues(GPB_##KEY_NAME,GPB_##VALUE_NAME, keys, rawValues, count);
 //%    _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-//%    if (count && rawValues && keys) {
-//%      for (NSUInteger i = 0; i < count; ++i) {
-//%DICTIONARY_VALIDATE_KEY_##KHELPER(keys[i], ______)        [_dictionary setObject:WRAPPED##VHELPER(rawValues[i]) forKey:WRAPPED##KHELPER(keys[i])];
-//%      }
-//%    }
 //%  }
 //%  return self;
 //%}
@@ -3080,13 +3075,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
                                      count:(NSUInteger)count {
   self = [super init];
   if (self) {
-    _dictionary = [[NSMutableDictionary alloc] init];
+    _dictionary = copyWrappedValues(GPB_UInt32,GPB_Enum, keys, rawValues, count);
     _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-    if (count && rawValues && keys) {
-      for (NSUInteger i = 0; i < count; ++i) {
-        [_dictionary setObject:@(rawValues[i]) forKey:@(keys[i])];
-      }
-    }
   }
   return self;
 }
@@ -4717,13 +4707,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
                                      count:(NSUInteger)count {
   self = [super init];
   if (self) {
-    _dictionary = [[NSMutableDictionary alloc] init];
+    _dictionary = copyWrappedValues(GPB_Int32,GPB_Enum, keys, rawValues, count);
     _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-    if (count && rawValues && keys) {
-      for (NSUInteger i = 0; i < count; ++i) {
-        [_dictionary setObject:@(rawValues[i]) forKey:@(keys[i])];
-      }
-    }
   }
   return self;
 }
@@ -6354,13 +6339,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
                                      count:(NSUInteger)count {
   self = [super init];
   if (self) {
-    _dictionary = [[NSMutableDictionary alloc] init];
+    _dictionary = copyWrappedValues(GPB_UInt64,GPB_Enum, keys, rawValues, count);
     _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-    if (count && rawValues && keys) {
-      for (NSUInteger i = 0; i < count; ++i) {
-        [_dictionary setObject:@(rawValues[i]) forKey:@(keys[i])];
-      }
-    }
   }
   return self;
 }
@@ -7991,13 +7971,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
                                      count:(NSUInteger)count {
   self = [super init];
   if (self) {
-    _dictionary = [[NSMutableDictionary alloc] init];
+    _dictionary = copyWrappedValues(GPB_Int64,GPB_Enum, keys, rawValues, count);
     _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-    if (count && rawValues && keys) {
-      for (NSUInteger i = 0; i < count; ++i) {
-        [_dictionary setObject:@(rawValues[i]) forKey:@(keys[i])];
-      }
-    }
   }
   return self;
 }
@@ -9656,17 +9631,8 @@ void GPBDictionaryReadEntry(id mapDictionary,
                                      count:(NSUInteger)count {
   self = [super init];
   if (self) {
-    _dictionary = [[NSMutableDictionary alloc] init];
+    _dictionary = copyWrappedValues(GPB_String,GPB_Enum, keys, rawValues, count);
     _validationFunc = (func != NULL ? func : DictDefault_IsValidValue);
-    if (count && rawValues && keys) {
-      for (NSUInteger i = 0; i < count; ++i) {
-        if (!keys[i]) {
-          [NSException raise:NSInvalidArgumentException
-                      format:@"Attempting to add nil key to a Dictionary"];
-        }
-        [_dictionary setObject:@(rawValues[i]) forKey:keys[i]];
-      }
-    }
   }
   return self;
 }

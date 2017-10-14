@@ -88,17 +88,15 @@ static BOOL GPBArrayHelper_isEqual(GPBContext *context, const GPBContext *otherA
   return (context->_count == otherArray->_count
           && context->_valueSize == otherArray->_valueSize && memcmp(context->_values, otherArray->_values, (context->_count * context->_valueSize)) == 0);
 }
-static NSString * GPBArrayHelper_description(GPBContext *context, id obj) {
+static NSString * GPBArrayHelper_description(GPBContext *context, id obj,NSString *format) {
   NSMutableString *result = [NSMutableString stringWithFormat:@"<%@ %p> { ", [obj class], obj];
   for (NSUInteger i = 0, count = context->_count; i < count; ++i) {
-    /*std::ostringstream output;
-    output << _values[i];
-    if (i == 0) {
-      [result appendFormat:@"%s", output.str().c_str()];
-    } else {
-      [result appendFormat:@", %s", output.str().c_str()];
-    }
-     */
+      if (i == 0) {
+        [result appendFormat:format, context->_values + context->_valueSize * i];
+       } else {
+         [result appendFormat:[@", " stringByAppendingString:format], context->_values + context->_valueSize * i];
+       }
+  
   }
   [result appendFormat:@" }"];
   return result;
@@ -208,7 +206,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   //_values[idx1] = _values[idx2];
   //_values[idx2] = temp;
 }
-//%PDDM-DEFINE DEFINE_ARRAY(LABEL,TYPE,STORAGE)
+//%PDDM-DEFINE DEFINE_ARRAY(LABEL,TYPE,STORAGE,FORMAT)
 //%@implementation GPB##LABEL##Array {
 //%  @package
 //%  GPBContext _context;
@@ -276,7 +274,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 //%  return _context._count;
 //%}
 //%- (NSString *)description {
-//%  return GPBArrayHelper_description(&_context,self);
+//%  return GPBArrayHelper_description(&_context,self,FORMAT);
 //%}
 //%- (void)enumerateValuesWithBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block {
 //%  [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -331,7 +329,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 //%
 
 
-//%PDDM-EXPAND DEFINE_ARRAY(Int32,int32_t,int32_t)
+//%PDDM-EXPAND DEFINE_ARRAY(Int32,int32_t,int32_t,@"%d")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBInt32Array {
@@ -401,7 +399,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%d");
 }
 - (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -454,7 +452,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(Bool,BOOL,char)
+//%PDDM-EXPAND DEFINE_ARRAY(Bool,BOOL,char,@"%d")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBBoolArray {
@@ -524,7 +522,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%d");
 }
 - (void)enumerateValuesWithBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -577,7 +575,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(Double,double,double)
+//%PDDM-EXPAND DEFINE_ARRAY(Double,double,double,@"%lf")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBDoubleArray {
@@ -647,7 +645,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%lf");
 }
 - (void)enumerateValuesWithBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -700,7 +698,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(Float,float,float)
+//%PDDM-EXPAND DEFINE_ARRAY(Float,float,float,@"%f")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBFloatArray {
@@ -770,7 +768,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%f");
 }
 - (void)enumerateValuesWithBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -823,7 +821,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(Int64,int64_t,int64_t)
+//%PDDM-EXPAND DEFINE_ARRAY(Int64,int64_t,int64_t,@"%lld")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBInt64Array {
@@ -893,7 +891,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%lld");
 }
 - (void)enumerateValuesWithBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -946,7 +944,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(UInt32,uint32_t,int32_t)
+//%PDDM-EXPAND DEFINE_ARRAY(UInt32,uint32_t,int32_t,@"%u")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBUInt32Array {
@@ -1016,7 +1014,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%u");
 }
 - (void)enumerateValuesWithBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -1069,7 +1067,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 @end
 
-//%PDDM-EXPAND DEFINE_ARRAY(UInt64,uint64_t,int64_t)
+//%PDDM-EXPAND DEFINE_ARRAY(UInt64,uint64_t,int64_t,@"%llu")
 // This block of code is generated, do not edit it directly.
 
 @implementation GPBUInt64Array {
@@ -1139,7 +1137,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
   return _context._count;
 }
 - (NSString *)description {
-  return GPBArrayHelper_description(&_context,self);
+  return GPBArrayHelper_description(&_context,self,@"%llu");
 }
 - (void)enumerateValuesWithBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
@@ -1406,7 +1404,7 @@ static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger 
 }
 
 - (NSString *)description {
-    return GPBArrayHelper_description(&_context,self);
+    return GPBArrayHelper_description(&_context,self,@"%d");
 }
 
 - (void)enumerateRawValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {

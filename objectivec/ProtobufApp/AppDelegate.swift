@@ -18,12 +18,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let proto = TestAllTypesProto2()
         
         proto.repeatedInt32Array = GPBInt32Array(value: 1)
-        
+      print("\(proto.serializedSize())")
+      proto.repeatedFloatArray = GPBFloatArray(value:2.3)
+      print("\(proto.serializedSize())")
         proto.repeatedBoolArray = GPBBoolArray(value: false)
-        
-        
-        
-        
+        print("\(proto.serializedSize())")
+      
+      proto.repeatedInt64Array = GPBInt64Array(value:1)
+      print("\(proto.serializedSize())")
+      
+      
+      proto.mapInt32Float = GPBInt32FloatDictionary();
+      print("\(proto.serializedSize())")
+      proto.mapSint32Sint32 = GPBInt32Int32Dictionary();
+      print("\(proto.serializedSize())")
+      proto.mapInt64Int64 = GPBInt64Int64Dictionary();
+      
+      print("\(proto.serializedSize())")
+      
         return true
     }
 

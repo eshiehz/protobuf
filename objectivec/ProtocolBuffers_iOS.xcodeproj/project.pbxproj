@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		07416BFB1F8B2A4000EDF341 /* TestMessagesProto3.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 07416BF71F8B2A4000EDF341 /* TestMessagesProto3.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		07416BFC1F8B2A4000EDF341 /* TestMessagesProto2.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 07416BF91F8B2A4000EDF341 /* TestMessagesProto2.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		07416BFE1F8B2DA700EDF341 /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
 		079156C51F8B19630098C514 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079156C41F8B19630098C514 /* AppDelegate.swift */; };
 		079156C71F8B19630098C514 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079156C61F8B19630098C514 /* ViewController.swift */; };
 		079156CA1F8B19630098C514 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 079156C81F8B19630098C514 /* Main.storyboard */; };
@@ -17,7 +16,8 @@
 		079156CF1F8B19630098C514 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 079156CD1F8B19630098C514 /* LaunchScreen.storyboard */; };
 		079156D41F8B19710098C514 /* libProtocolBuffers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7461B52E0F94FAF800A0C422 /* libProtocolBuffers.a */; };
 		079156DA1F8B1B910098C514 /* Conformance.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 079156D91F8B1B900098C514 /* Conformance.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		101F7BA21F908E1600058530 /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
+		108233C61F91BE73007ACF5D /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
+		108233C71F91BE76007ACF5D /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
@@ -563,10 +563,10 @@
 				F4411BE81AF1301700324B4A /* GPBArray_PackagePrivate.h */,
 				F4487C701A9F906200531423 /* GPBArray.h */,
 				F4487C711A9F906200531423 /* GPBArray.m */,
+				F4353D251ABB156F005A6198 /* GPBDictionary.m */,
 				7461B48D0F94F99000A0C422 /* GPBBootstrap.h */,
 				F43725921AC9835D004DCAFB /* GPBDictionary_PackagePrivate.h */,
 				F4353D241ABB156F005A6198 /* GPBDictionary.h */,
-				F4353D251ABB156F005A6198 /* GPBDictionary.m */,
 				8BEB5AE01498033E0078BF9D /* GPBRuntimeTypes.h */,
 				F4487C7D1AAE06C500531423 /* GPBUtilities_PackagePrivate.h */,
 				7461B4E50F94F99000A0C422 /* GPBUtilities.h */,
@@ -825,8 +825,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				108233C71F91BE76007ACF5D /* GPBArray2.m in Sources */,
 				7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */,
-				07416BFE1F8B2DA700EDF341 /* GPBArray2.m in Sources */,
 				F4E675D21B21D1620054530B /* Empty.pbobjc.m in Sources */,
 				7461B53D0F94FB4E00A0C422 /* GPBCodedOutputStream.m in Sources */,
 				7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */,
@@ -837,8 +837,8 @@
 				7461B5610F94FB4E00A0C422 /* GPBUnknownFieldSet.m in Sources */,
 				7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */,
 				7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */,
-				101F7BA21F908E1600058530 /* GPBDictionary2.m in Sources */,
 				F4E675D11B21D1620054530B /* Api.pbobjc.m in Sources */,
+				108233C61F91BE73007ACF5D /* GPBDictionary2.m in Sources */,
 				F4E675D41B21D1620054530B /* SourceContext.pbobjc.m in Sources */,
 				8B79657B14992E3F002FFBFC /* GPBRootObject.m in Sources */,
 				8B96157414C8C38C00A2AC0B /* GPBDescriptor.m in Sources */,
@@ -991,7 +991,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.google.ProtobufApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -1037,7 +1037,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "";
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.google.ProtobufApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "ProtobufApp/ProtobufApp-Bridging-Header.h";

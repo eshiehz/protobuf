@@ -69,6 +69,7 @@ typedef union {
   GPB_UNSAFE_UNRETAINED NSData *valueData;
   GPB_UNSAFE_UNRETAINED NSString *valueString;
   GPB_UNSAFE_UNRETAINED GPBMessage *valueMessage;
+  GPB_UNSAFE_UNRETAINED id valueObject;
   int32_t valueEnum;
 } GPBGenericValue;
 

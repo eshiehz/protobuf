@@ -1120,7 +1120,21 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%
 //%- (void)writeToCodedOutputStream:(GPBCodedOutputStream *)outputStream
 //%                         asField:(GPBFieldDescriptor *)field {
-//%   writeToCodedOutputStream(outputStream,field,GPB_Bool,GPB_##VALUE_NAME,_dictionary);
+//%  GPBDataType valueDataType = GPBGetFieldDataType(field);
+//%  uint32_t tag = GPBWireFormatMakeTag(GPBFieldNumber(field), GPBWireFormatLengthDelimited);
+//%  for (int i = 0; i < 2; ++i) {
+//%    if (BOOL_DICT_HAS##HELPER(i, )) {
+//%      // Write the tag.
+//%      [outputStream writeInt32NoTag:tag];
+//%      // Write the size of the message.
+//%      size_t msgSize = ComputeDictBoolFieldSize((i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
+//%      msgSize += ComputeDict##VALUE_NAME##FieldSize(_values[i], kMapValueFieldNumber, valueDataType);
+//%      [outputStream writeInt32NoTag:(int32_t)msgSize];
+//%      // Write the fields.
+//%      WriteDictBoolField(outputStream, (i == 1), kMapKeyFieldNumber, GPBDataTypeBool);
+//%      WriteDict##VALUE_NAME##Field(outputStream, _values[i], kMapValueFieldNumber, valueDataType);
+//%    }
+//%  }
 //%}
 //%
 //%BOOL_DICT_MUTATIONS_##HELPER(VALUE_NAME, VALUE_TYPE)

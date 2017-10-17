@@ -114,7 +114,7 @@ static size_t computeSerializationType(GPBType type,GPBGenericValue val,uint32_t
 static void UnwrapValue(GPBType type, id number, GPBGenericValue *val);
 static id WrapValue(GPBType type,GPBGenericValue val);
 
-static void SafeUnwrapCopy(GPBGenericValue *val, GPBType type, const void *srcBuffer,NSUInteger i) {
+static __attribute__ ((noinline)) void SafeUnwrapCopy(GPBGenericValue *val, GPBType type, const void *srcBuffer,NSUInteger i) {
   switch (type) {
     case GPB_UInt32:
       val->valueUInt32 = ((uint32_t *)srcBuffer)[i];
@@ -149,7 +149,7 @@ static void SafeUnwrapCopy(GPBGenericValue *val, GPBType type, const void *srcBu
   }
 }
 
-static void ValidateObject(GPBType type, const void *values, NSUInteger i, NSString *description) {
+static __attribute__ ((noinline)) void ValidateObject(GPBType type, const void *values, NSUInteger i, NSString *description) {
   if (type == GPB_Object) {
      if (!((id *)values)[i]) {
        [NSException raise:NSInvalidArgumentException
@@ -158,7 +158,7 @@ static void ValidateObject(GPBType type, const void *values, NSUInteger i, NSStr
   }
 }
 
-static NSMutableDictionary *copyWrappedValues(GPBType keyType,GPBType valueType,const void *keys,const void *values,
+static __attribute__ ((noinline)) NSMutableDictionary *copyWrappedValues(GPBType keyType,GPBType valueType,const void *keys,const void *values,
                                               NSUInteger count) {
   NSMutableDictionary *dict =  [[NSMutableDictionary alloc] init];
       if (count && values && keys) {
@@ -177,7 +177,7 @@ static NSMutableDictionary *copyWrappedValues(GPBType keyType,GPBType valueType,
   return dict;
 }
 
-static void enumerateKeysUsingBlock(GPBType keyType,GPBType valueType, NSDictionary *dict, void (^block)(GPBGenericValue,GPBGenericValue,BOOL *),BOOL (*validationFunc)(int32_t)) {
+static __attribute__ ((noinline)) void enumerateKeysUsingBlock(GPBType keyType,GPBType valueType, NSDictionary *dict, void (^block)(GPBGenericValue,GPBGenericValue,BOOL *),BOOL (*validationFunc)(int32_t)) {
   BOOL stop = NO;
   NSEnumerator *keys = [dict keyEnumerator];
   NSNumber *aKey;
@@ -198,7 +198,7 @@ static void enumerateKeysUsingBlock(GPBType keyType,GPBType valueType, NSDiction
 }
 
 
-static size_t computeSerializedSizeAsField(GPBFieldDescriptor *field,GPBType keyType,GPBType valueType,NSDictionary *dict) {
+static __attribute__ ((noinline)) size_t computeSerializedSizeAsField(GPBFieldDescriptor *field,GPBType keyType,GPBType valueType,NSDictionary *dict) {
   NSUInteger count = dict.count;
     if (count == 0) {
       return 0;
@@ -223,7 +223,7 @@ static size_t computeSerializedSizeAsField(GPBFieldDescriptor *field,GPBType key
   return result;
 }
 
-static size_t computeBoolSerializedSizeAsField(GPBFieldDescriptor *field,GPBType valueType,const void * values) {
+static __attribute__ ((noinline)) size_t computeBoolSerializedSizeAsField(GPBFieldDescriptor *field,GPBType valueType,const void * values) {
   GPBGenericValue val,val2;
   SafeUnwrapCopy(&val, valueType, values, 0);
   SafeUnwrapCopy(&val2, valueType, values, 1);
@@ -233,7 +233,7 @@ static size_t computeBoolSerializedSizeAsField(GPBFieldDescriptor *field,GPBType
   return retVal;
 }
 
-static void writeSerializationType(GPBCodedOutputStream *outputStream, GPBType type,GPBGenericValue val,uint32_t fieldNumber,GPBDataType dataType) {
+static __attribute__ ((noinline)) void writeSerializationType(GPBCodedOutputStream *outputStream, GPBType type,GPBGenericValue val,uint32_t fieldNumber,GPBDataType dataType) {
   
   switch (type) {
     case GPB_UInt32:
@@ -269,7 +269,7 @@ static void writeSerializationType(GPBCodedOutputStream *outputStream, GPBType t
   }
 }
 
-static size_t computeSerializationType(GPBType type,GPBGenericValue val,uint32_t fieldNumber,GPBDataType dataType) {
+static __attribute__ ((noinline)) size_t computeSerializationType(GPBType type,GPBGenericValue val,uint32_t fieldNumber,GPBDataType dataType) {
 
   size_t msgSize = 0;
   
@@ -308,7 +308,7 @@ static size_t computeSerializationType(GPBType type,GPBGenericValue val,uint32_t
   return msgSize;
 }
 
-static id WrapValue(GPBType type,GPBGenericValue val) {
+static __attribute__ ((noinline)) id WrapValue(GPBType type,GPBGenericValue val) {
   id retVal = nil;
   
   switch (type) {
@@ -348,7 +348,7 @@ static id WrapValue(GPBType type,GPBGenericValue val) {
   return retVal;
 }
 
-static void UnwrapValue(GPBType type, id number, GPBGenericValue *val) {
+static __attribute__ ((noinline)) void UnwrapValue(GPBType type, id number, GPBGenericValue *val) {
   switch (type) {
     case GPB_UInt32:
       val->valueUInt32 = [(NSNumber *)number unsignedIntValue];
@@ -385,7 +385,7 @@ static void UnwrapValue(GPBType type, id number, GPBGenericValue *val) {
   }
 }
 
-static void writeToCodedOutputStream(GPBCodedOutputStream *outputStream,GPBFieldDescriptor *field,
+static __attribute__ ((noinline)) void writeToCodedOutputStream(GPBCodedOutputStream *outputStream,GPBFieldDescriptor *field,
                                 GPBType keyType,GPBType valueType,NSDictionary *internal) {
   GPBDataType valueDataType = GPBGetFieldDataType(field);
   GPBDataType keyDataType = field.mapKeyDataType;

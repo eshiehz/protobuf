@@ -51,7 +51,7 @@ static id GPBArrayHelper_array(Class cls) {
   return [[cls alloc] init];
 }
 
-static id GPBArrayHelper_initWithValues(GPBContext *context, id self,const char * values,
+static __attribute__ ((noinline)) id GPBArrayHelper_initWithValues(GPBContext *context, id self,const char * values,
                                                           NSUInteger count) {
   if (self) {
     if (count && values) {
@@ -71,7 +71,7 @@ static id GPBArrayHelper_initWithValues(GPBContext *context, id self,const char 
   return self;
 }
 
-static void GPBArrayHelper_internalResizeToCapacity(GPBContext *context, NSUInteger newCapacity) {
+static __attribute__ ((noinline)) void GPBArrayHelper_internalResizeToCapacity(GPBContext *context, NSUInteger newCapacity) {
   context->_values = (char *)reallocf(context->_values, newCapacity * context->_valueSize);
   if (context->_values == NULL) {
     context->_capacity = 0;
@@ -83,12 +83,12 @@ static void GPBArrayHelper_internalResizeToCapacity(GPBContext *context, NSUInte
   context->_capacity = newCapacity;
 }
 
-static BOOL GPBArrayHelper_isEqual(GPBContext *context, const GPBContext *otherArray) {
+static __attribute__ ((noinline)) BOOL GPBArrayHelper_isEqual(GPBContext *context, const GPBContext *otherArray) {
   
   return (context->_count == otherArray->_count
           && context->_valueSize == otherArray->_valueSize && memcmp(context->_values, otherArray->_values, (context->_count * context->_valueSize)) == 0);
 }
-static NSString * GPBArrayHelper_description(GPBContext *context, id obj,NSString *format) {
+static __attribute__ ((noinline)) NSString * GPBArrayHelper_description(GPBContext *context, id obj,NSString *format) {
   NSMutableString *result = [NSMutableString stringWithFormat:@"<%@ %p> { ", [obj class], obj];
   for (NSUInteger i = 0, count = context->_count; i < count; ++i) {
       if (i == 0) {
@@ -102,7 +102,7 @@ static NSString * GPBArrayHelper_description(GPBContext *context, id obj,NSStrin
   return result;
 }
 
-static void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnumerationOptions opts,
+static __attribute__ ((noinline)) void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnumerationOptions opts,
   void (^block)(const char *value, NSUInteger idx, BOOL *stop)){
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
   BOOL stop = NO;
@@ -118,7 +118,7 @@ static void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnu
     }
   }
 }
-static void GPBArrayHelper_valueAtIndex(GPBContext *context, NSUInteger index,char * buffer){
+static __attribute__ ((noinline)) void GPBArrayHelper_valueAtIndex(GPBContext *context, NSUInteger index,char * buffer){
   if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
@@ -127,7 +127,7 @@ static void GPBArrayHelper_valueAtIndex(GPBContext *context, NSUInteger index,ch
   memmove(buffer,context->_values + context->_valueSize * index,context->_valueSize);
 }
 
-static void GPBArrayHelper_addValues(GPBContext *context, const char * values,NSUInteger count) {
+static __attribute__ ((noinline)) void GPBArrayHelper_addValues(GPBContext *context, const char * values,NSUInteger count) {
   if (values == NULL || count == 0) return;
   NSUInteger initialCount = context->_count;
   NSUInteger newCount = initialCount + count;
@@ -137,7 +137,7 @@ static void GPBArrayHelper_addValues(GPBContext *context, const char * values,NS
   context->_count = newCount;
   memcpy(&context->_values[initialCount * context->_valueSize], values, count * context->_valueSize);
 }
-static void GPBArrayHelper_insertValue(GPBContext *context, const char * value,NSUInteger index) {
+static __attribute__ ((noinline)) void GPBArrayHelper_insertValue(GPBContext *context, const char * value,NSUInteger index) {
   if (index >= context->_count + 1) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
@@ -155,7 +155,7 @@ static void GPBArrayHelper_insertValue(GPBContext *context, const char * value,N
   memmove(context->_values + index * context->_valueSize,value,context->_valueSize);
 }
 
-static void GPBArrayHelper_replaceValueAtIndex(GPBContext *context, NSUInteger index,const char *value) {
+static __attribute__ ((noinline)) void GPBArrayHelper_replaceValueAtIndex(GPBContext *context, NSUInteger index,const char *value) {
   if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
@@ -165,7 +165,7 @@ static void GPBArrayHelper_replaceValueAtIndex(GPBContext *context, NSUInteger i
     memmove(context->_values + index * context->_valueSize, value, context->_valueSize);
 }
 
-static void GPBArrayHelper_removeValueAtIndex(GPBContext *context, NSUInteger index) {
+static __attribute__ ((noinline)) void GPBArrayHelper_removeValueAtIndex(GPBContext *context, NSUInteger index) {
   if (index >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",
@@ -181,13 +181,13 @@ static void GPBArrayHelper_removeValueAtIndex(GPBContext *context, NSUInteger in
   }
 }
 
-static void GPBArrayHelper_removeAll(GPBContext *context) {
+static __attribute__ ((noinline)) void GPBArrayHelper_removeAll(GPBContext *context) {
   context->_count = 0;
   if ((0 + (2 * kChunkSize)) < context->_capacity) {
     GPBArrayHelper_internalResizeToCapacity(context,CapacityFromCount(0));
   }
 }
-static void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger idx1,NSUInteger idx2){
+static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBContext *context, NSUInteger idx1,NSUInteger idx2){
   if (idx1 >= context->_count) {
     [NSException raise:NSRangeException
                 format:@"Index (%lu) beyond bounds (%lu)",

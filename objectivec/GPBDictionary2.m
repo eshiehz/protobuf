@@ -36,6 +36,7 @@
 #import "GPBMessage_PackagePrivate.h"
 #import "GPBUtilities_PackagePrivate.h"
 
+#import "GPBType.h"
 // ------------------------------ NOTE ------------------------------
 // At the moment, this is all using NSNumbers in NSDictionaries under
 // the hood, but it is all hidden so we can come back and optimize
@@ -73,20 +74,6 @@ static BOOL DictDefault_IsValidValue(int32_t value) {
   return (value != kGPBUnrecognizedEnumeratorValue);
 }
 
-
-
-typedef enum {
-  GPB_Int32,
-  GPB_UInt32,
-  GPB_Int64,
-  GPB_UInt64,
-  GPB_Float,
-  GPB_Double,
-  GPB_Bool,
-  GPB_Object,
-  GPB_String,
-  GPB_Enum
-} GPBType;
 
 static size_t ComputeDictUInt32FieldSize(uint32_t, uint32_t, GPBDataType);
 static size_t ComputeDictInt32FieldSize(int32_t, uint32_t, GPBDataType);

@@ -29,7 +29,6 @@
 		108233E21F92BBB6007ACF5D /* GPBCodedOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4910F94F99000A0C422 /* GPBCodedOutputStream.m */; };
 		108233E31F92BBB6007ACF5D /* GPBWireFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4E80F94F99000A0C422 /* GPBWireFormat.m */; };
 		108233E41F92BBBD007ACF5D /* GPBDescriptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B96157314C8C38C00A2AC0B /* GPBDescriptor.m */; };
-		108233E51F92BBBD007ACF5D /* GPBMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4BF0F94F99000A0C422 /* GPBMessage.m */; };
 		108233F31F92BBD6007ACF5D /* GPBUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4E60F94F99000A0C422 /* GPBUtilities.m */; };
 		108233F41F92BBD9007ACF5D /* GPBWellKnownTypes.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B4248E21A929C8900BC1EC6 /* GPBWellKnownTypes.m */; };
 		108233F71F92BBFC007ACF5D /* Any.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = F4E675B71B21D1440054530B /* Any.pbobjc.m */; };
@@ -45,13 +44,13 @@
 		108234031F92BD86007ACF5D /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		108234081F92BE02007ACF5D /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		108234091F92BE04007ACF5D /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
+		10FF1F9C1F956906009C3F91 /* GPBMessage2.m in Sources */ = {isa = PBXBuildFile; fileRef = 10FF1F9B1F956906009C3F91 /* GPBMessage2.m */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
 		7461B53D0F94FB4E00A0C422 /* GPBCodedOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4910F94F99000A0C422 /* GPBCodedOutputStream.m */; };
 		7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4A90F94F99000A0C422 /* GPBExtensionRegistry.m */; };
 		7461B54C0F94FB4E00A0C422 /* GPBUnknownField.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4AF0F94F99000A0C422 /* GPBUnknownField.m */; };
-		7461B5530F94FB4E00A0C422 /* GPBMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4BF0F94F99000A0C422 /* GPBMessage.m */; };
 		7461B5610F94FB4E00A0C422 /* GPBUnknownFieldSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4E20F94F99000A0C422 /* GPBUnknownFieldSet.m */; };
 		7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4E60F94F99000A0C422 /* GPBUtilities.m */; };
 		7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B4E80F94F99000A0C422 /* GPBWireFormat.m */; };
@@ -179,6 +178,8 @@
 		108233D01F92BB12007ACF5D /* ProtobufFramework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProtobufFramework.h; sourceTree = "<group>"; };
 		108233D11F92BB12007ACF5D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1084A9CB1F86C29D00D126F0 /* GPBArray2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPBArray2.m; sourceTree = "<group>"; };
+		10FF1F9A1F956886009C3F91 /* GPBType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GPBType.h; sourceTree = "<group>"; };
+		10FF1F9B1F956906009C3F91 /* GPBMessage2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPBMessage2.m; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GPBConcurrencyTests.m; sourceTree = "<group>"; };
 		51457B5F18D0B7AF00CCC606 /* GPBCodedInputStream_PackagePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GPBCodedInputStream_PackagePrivate.h; sourceTree = "<group>"; };
@@ -543,6 +544,7 @@
 				7461B4BE0F94F99000A0C422 /* GPBMessage.h */,
 				5196A06918CE16B000B759E2 /* GPBMessage_PackagePrivate.h */,
 				7461B4BF0F94F99000A0C422 /* GPBMessage.m */,
+				10FF1F9B1F956906009C3F91 /* GPBMessage2.m */,
 			);
 			name = Messages;
 			sourceTree = "<group>";
@@ -645,6 +647,7 @@
 				8B4248E21A929C8900BC1EC6 /* GPBWellKnownTypes.m */,
 				1084A9CB1F86C29D00D126F0 /* GPBArray2.m */,
 				07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */,
+				10FF1F9A1F956886009C3F91 /* GPBType.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -942,7 +945,6 @@
 				108233DF1F92BBAE007ACF5D /* GPBUnknownField.m in Sources */,
 				108233FB1F92BBFC007ACF5D /* FieldMask.pbobjc.m in Sources */,
 				108233E11F92BBB6007ACF5D /* GPBCodedInputStream.m in Sources */,
-				108233E51F92BBBD007ACF5D /* GPBMessage.m in Sources */,
 				108234081F92BE02007ACF5D /* GPBDictionary2.m in Sources */,
 				108234091F92BE04007ACF5D /* GPBArray2.m in Sources */,
 				108233E31F92BBB6007ACF5D /* GPBWireFormat.m in Sources */,
@@ -975,12 +977,12 @@
 				7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */,
 				F4E675D31B21D1620054530B /* FieldMask.pbobjc.m in Sources */,
 				7461B54C0F94FB4E00A0C422 /* GPBUnknownField.m in Sources */,
-				7461B5530F94FB4E00A0C422 /* GPBMessage.m in Sources */,
 				F47476E91D21A537007C7B1A /* Duration.pbobjc.m in Sources */,
 				7461B5610F94FB4E00A0C422 /* GPBUnknownFieldSet.m in Sources */,
 				7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */,
 				7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */,
 				F4E675D11B21D1620054530B /* Api.pbobjc.m in Sources */,
+				10FF1F9C1F956906009C3F91 /* GPBMessage2.m in Sources */,
 				F4E675D41B21D1620054530B /* SourceContext.pbobjc.m in Sources */,
 				8B79657B14992E3F002FFBFC /* GPBRootObject.m in Sources */,
 				8B96157414C8C38C00A2AC0B /* GPBDescriptor.m in Sources */,

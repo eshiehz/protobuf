@@ -50,23 +50,6 @@ typedef struct GPBContext {
 } GPBContext;
 
 
-/*
-static id initWithValues(id self,GPBContext *context, const char * values,NSUInteger count);
-static void internalResizeToCapacity(GPBContext *context,NSUInteger capacity);
-static BOOL isEqual(GPBContext *context,const GPBContext *obj);
-static NSString * description(GPBContext *context,id obj);
-static void enumerateValuesWithOptions(GPBContext *context,NSEnumerationOptions opts,
-                              void (^block)(const char * value, NSUInteger idx, BOOL *stop));
-static void valueAtIndex(GPBContext *context,NSUInteger index,char *buffer);
-static void addValues(GPBContext *context,const char * values,NSUInteger count);
-static void insertValue(GPBContext *context,const char * valuePtr,NSUInteger index);
-static void replaceValueAtIndex(GPBContext *context,NSUInteger index,const char * valuePtr);
-static void removeValueAtIndex(GPBContext *context,NSUInteger index);
-static void removeAll(GPBContext *context,);
-static void exchangeValueAtIndex(GPBContext *context,NSUInteger idx1,NSUInteger idx2);
-
-*/
-
 static id GPBArrayHelper_array(Class cls) {
   return [[cls alloc] init];
 }

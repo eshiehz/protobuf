@@ -16,7 +16,6 @@
 		079156CF1F8B19630098C514 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 079156CD1F8B19630098C514 /* LaunchScreen.storyboard */; };
 		079156D41F8B19710098C514 /* libProtocolBuffers.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7461B52E0F94FAF800A0C422 /* libProtocolBuffers.a */; };
 		079156DA1F8B1B910098C514 /* Conformance.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 079156D91F8B1B900098C514 /* Conformance.pbobjc.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		108233C71F91BE76007ACF5D /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
 		108233D21F92BB12007ACF5D /* ProtobufFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = 108233D01F92BB12007ACF5D /* ProtobufFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		108233D51F92BB12007ACF5D /* ProtobufFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 108233CE1F92BB12007ACF5D /* ProtobufFramework.framework */; };
 		108233D61F92BB12007ACF5D /* ProtobufFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 108233CE1F92BB12007ACF5D /* ProtobufFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -42,9 +41,10 @@
 		108233FE1F92BBFC007ACF5D /* Timestamp.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B4248E01A929C7D00BC1EC6 /* Timestamp.pbobjc.m */; };
 		108233FF1F92BBFC007ACF5D /* Type.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = F4E675C51B21D1440054530B /* Type.pbobjc.m */; };
 		108234001F92BBFC007ACF5D /* Wrappers.pbobjc.m in Sources */ = {isa = PBXBuildFile; fileRef = F4E675C71B21D1440054530B /* Wrappers.pbobjc.m */; };
-		108234031F92BD86007ACF5D /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		108234081F92BE02007ACF5D /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		108234091F92BE04007ACF5D /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
+		10EA05711F96AC3300DEB169 /* GPBArray2.m in Sources */ = {isa = PBXBuildFile; fileRef = 1084A9CB1F86C29D00D126F0 /* GPBArray2.m */; };
+		10EA05721F96AC3500DEB169 /* GPBDictionary2.m in Sources */ = {isa = PBXBuildFile; fileRef = 07FB2C351F8F225900EB0DBB /* GPBDictionary2.m */; };
 		5102DABC1891A073002037B6 /* GPBConcurrencyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5102DABB1891A052002037B6 /* GPBConcurrencyTests.m */; };
 		7461B5360F94FB4600A0C422 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 7461B48F0F94F99000A0C422 /* GPBCodedInputStream.m */; };
@@ -967,12 +967,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				108233C71F91BE76007ACF5D /* GPBArray2.m in Sources */,
 				7461B53C0F94FB4E00A0C422 /* GPBCodedInputStream.m in Sources */,
 				F4E675D21B21D1620054530B /* Empty.pbobjc.m in Sources */,
 				7461B53D0F94FB4E00A0C422 /* GPBCodedOutputStream.m in Sources */,
-				108234031F92BD86007ACF5D /* GPBDictionary2.m in Sources */,
 				7461B5490F94FB4E00A0C422 /* GPBExtensionRegistry.m in Sources */,
+				10EA05721F96AC3500DEB169 /* GPBDictionary2.m in Sources */,
 				F4E675D31B21D1620054530B /* FieldMask.pbobjc.m in Sources */,
 				7461B54C0F94FB4E00A0C422 /* GPBUnknownField.m in Sources */,
 				7461B5530F94FB4E00A0C422 /* GPBMessage.m in Sources */,
@@ -980,6 +979,7 @@
 				7461B5610F94FB4E00A0C422 /* GPBUnknownFieldSet.m in Sources */,
 				7461B5630F94FB4E00A0C422 /* GPBUtilities.m in Sources */,
 				7461B5640F94FB4E00A0C422 /* GPBWireFormat.m in Sources */,
+				10EA05711F96AC3300DEB169 /* GPBArray2.m in Sources */,
 				F4E675D11B21D1620054530B /* Api.pbobjc.m in Sources */,
 				F4E675D41B21D1620054530B /* SourceContext.pbobjc.m in Sources */,
 				8B79657B14992E3F002FFBFC /* GPBRootObject.m in Sources */,
@@ -1136,6 +1136,7 @@
 				);
 				INFOPLIST_FILE = ProtobufApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_GENERATE_MAP_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				OTHER_LDFLAGS = "-ObjC";
@@ -1182,6 +1183,7 @@
 				);
 				INFOPLIST_FILE = ProtobufApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_GENERATE_MAP_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = YES;

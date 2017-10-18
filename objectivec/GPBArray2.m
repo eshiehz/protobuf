@@ -51,7 +51,8 @@ static id GPBArrayHelper_array(Class cls) {
   return [[cls alloc] init];
 }
 
-static __attribute__ ((noinline)) id GPBArrayHelper_initWithValues(GPBContext *context, id self,const char * values,
+static __attribute__ ((noinline)) id GPBArrayHelper_initWithValues(GPBContext *context, id self,
+                                                                   const char * values,
                                                           NSUInteger count) {
   if (self) {
     if (count && values) {
@@ -71,7 +72,8 @@ static __attribute__ ((noinline)) id GPBArrayHelper_initWithValues(GPBContext *c
   return self;
 }
 
-static __attribute__ ((noinline)) void GPBArrayHelper_internalResizeToCapacity(GPBContext *context, NSUInteger newCapacity) {
+static __attribute__ ((noinline)) void GPBArrayHelper_internalResizeToCapacity(GPBContext *context,
+                                                                               NSUInteger newCapacity) {
   context->_values = (char *)reallocf(context->_values, newCapacity * context->_valueSize);
   if (context->_values == NULL) {
     context->_capacity = 0;
@@ -101,19 +103,20 @@ static __attribute__ ((noinline)) NSString * GPBArrayHelper_description(GPBConte
   [result appendFormat:@" }"];
   return result;
 }
+typedef void (*enumFunc)(const char *value, NSUInteger idx, BOOL *stop,
+                 void (^block)(void * value, NSUInteger idx, BOOL *stop),GPBEnumValidationFunc);
 
-static __attribute__ ((noinline)) void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnumerationOptions opts,
-  void (^block)(const char *value, NSUInteger idx, BOOL *stop)){
+static __attribute__ ((noinline)) void GPBArrayHelper_enumerateValuesWithOptions(GPBContext *context, NSEnumerationOptions opts,void (^block)(void * value, NSUInteger idx, BOOL *stop), enumFunc func,GPBEnumValidationFunc validationFunc){
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
   BOOL stop = NO;
   if ((opts & NSEnumerationReverse) == 0) {
     for (NSUInteger i = 0, count = context->_count; i < count; ++i) {
-      block(context->_values + context->_valueSize * i, i, &stop);
+      func(context->_values + context->_valueSize * i, i, &stop,block,validationFunc);
       if (stop) break;
     }
   } else if (context->_count > 0) {
     for (NSUInteger i = context->_count; i > 0; --i) {
-      block(context->_values + context->_valueSize * (i - 1), (i - 1), &stop);
+      func(context->_values + context->_valueSize * (i - 1), (i - 1), &stop,block,validationFunc);
       if (stop) break;
     }
   }
@@ -279,14 +282,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 //%- (void)enumerateValuesWithBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block {
 //%  [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 //%}
+//%static void enumerateValuesWithOptions##TYPE##_Helper(const char *value, NSUInteger idx, BOOL *stop,
+//%                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+//%                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+//%  void (^castBlock)(TYPE value,NSUInteger idx, BOOL *stop) =  (void (^)(TYPE value,NSUInteger idx, BOOL *stop))block;
+//%  TYPE temp;
+//%  temp = *((TYPE *)value);
+//%  castBlock(temp,idx,stop);
+//%
+//%}
 //%- (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
 //%  usingBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block {
-//%  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-//%    TYPE temp;
-//%    memcpy(&temp,value,sizeof(TYPE));
-//%    block(temp,idx,stop);
-//%  };
-//%  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+//%  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptions##TYPE##_Helper,NULL);
 //%}
 //%- (TYPE)valueAtIndex:(NSUInteger)index {
 //%   TYPE temp;
@@ -404,14 +411,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsint32_t_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(int32_t value,NSUInteger idx, BOOL *stop) =  (void (^)(int32_t value,NSUInteger idx, BOOL *stop))block;
+  int32_t temp;
+  temp = *((int32_t *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    int32_t temp;
-    memcpy(&temp,value,sizeof(int32_t));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsint32_t_Helper,NULL);
 }
 - (int32_t)valueAtIndex:(NSUInteger)index {
    int32_t temp;
@@ -527,14 +538,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsBOOL_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(BOOL value,NSUInteger idx, BOOL *stop) =  (void (^)(BOOL value,NSUInteger idx, BOOL *stop))block;
+  BOOL temp;
+  temp = *((BOOL *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    BOOL temp;
-    memcpy(&temp,value,sizeof(BOOL));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsBOOL_Helper,NULL);
 }
 - (BOOL)valueAtIndex:(NSUInteger)index {
    BOOL temp;
@@ -650,14 +665,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsdouble_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(double value,NSUInteger idx, BOOL *stop) =  (void (^)(double value,NSUInteger idx, BOOL *stop))block;
+  double temp;
+  temp = *((double *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    double temp;
-    memcpy(&temp,value,sizeof(double));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsdouble_Helper,NULL);
 }
 - (double)valueAtIndex:(NSUInteger)index {
    double temp;
@@ -773,14 +792,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsfloat_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(float value,NSUInteger idx, BOOL *stop) =  (void (^)(float value,NSUInteger idx, BOOL *stop))block;
+  float temp;
+  temp = *((float *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    float temp;
-    memcpy(&temp,value,sizeof(float));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsfloat_Helper,NULL);
 }
 - (float)valueAtIndex:(NSUInteger)index {
    float temp;
@@ -896,14 +919,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsint64_t_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(int64_t value,NSUInteger idx, BOOL *stop) =  (void (^)(int64_t value,NSUInteger idx, BOOL *stop))block;
+  int64_t temp;
+  temp = *((int64_t *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    int64_t temp;
-    memcpy(&temp,value,sizeof(int64_t));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsint64_t_Helper,NULL);
 }
 - (int64_t)valueAtIndex:(NSUInteger)index {
    int64_t temp;
@@ -1019,14 +1046,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsuint32_t_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(uint32_t value,NSUInteger idx, BOOL *stop) =  (void (^)(uint32_t value,NSUInteger idx, BOOL *stop))block;
+  uint32_t temp;
+  temp = *((uint32_t *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    uint32_t temp;
-    memcpy(&temp,value,sizeof(uint32_t));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsuint32_t_Helper,NULL);
 }
 - (uint32_t)valueAtIndex:(NSUInteger)index {
    uint32_t temp;
@@ -1142,14 +1173,18 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
 - (void)enumerateValuesWithBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block {
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
+static void enumerateValuesWithOptionsuint64_t_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                                      GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(uint64_t value,NSUInteger idx, BOOL *stop) =  (void (^)(uint64_t value,NSUInteger idx, BOOL *stop))block;
+  uint64_t temp;
+  temp = *((uint64_t *)value);
+  castBlock(temp,idx,stop);
+
+}
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
   usingBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block {
-  void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-    uint64_t temp;
-    memcpy(&temp,value,sizeof(uint64_t));
-    block(temp,idx,stop);
-  };
-  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+  GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void *, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsuint64_t_Helper,NULL);
 }
 - (uint64_t)valueAtIndex:(NSUInteger)index {
    uint64_t temp;
@@ -1411,15 +1446,20 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
   [self enumerateRawValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 
+static void enumerateRawValuesEnum_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                          void (^block)(void * value, NSUInteger idx, BOOL *stop),
+                                          GPBEnumValidationFunc validationFunc __attribute__((unused))) {
+  void (^castBlock)(int32_t value,NSUInteger idx, BOOL *stop) =  (void (^)(int32_t value,NSUInteger idx, BOOL *stop))block;
+  int32_t temp;
+  temp = *((int32_t *)value);
+  castBlock(temp,idx,stop);
+  
+}
+
 - (void)enumerateRawValuesWithOptions:(NSEnumerationOptions)opts
                            usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
-    void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-        int32_t temp;
-        memcpy(&temp,value,sizeof(int32_t));
-        block(temp,idx,stop);
-    };
-   GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+   GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void * value, NSUInteger idx, BOOL *stop))block,enumerateRawValuesEnum_Helper,_validationFunc);
 }
 
 - (int32_t)valueAtIndex:(NSUInteger)index {
@@ -1442,18 +1482,22 @@ static __attribute__ ((noinline)) void GPBArrayHelper_exchangeValueAtIndex(GPBCo
   [self enumerateValuesWithOptions:(NSEnumerationOptions)0 usingBlock:block];
 }
 
+static void enumerateValuesWithOptionsEnum_Helper(const char *value, NSUInteger idx, BOOL *stop,
+                                                     void (^block)(void * value, NSUInteger idx, BOOL *stop),GPBEnumValidationFunc validationFunc) {
+  void (^castBlock)(int32_t value,NSUInteger idx, BOOL *stop) =  (void (^)(int32_t value,NSUInteger idx, BOOL *stop))block;
+  int32_t temp;
+  temp = *((int32_t *)value);
+  if (!validationFunc(temp)) {
+    temp = kGPBUnrecognizedEnumeratorValue;
+  }
+  castBlock(temp,idx,stop);
+  
+}
+
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
                         usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block {
   // NSEnumerationConcurrent isn't currently supported (and Apple's docs say that is ok).
-    void (^block2)(const char *value, NSUInteger idx, BOOL *stop) = ^(const char * value, NSUInteger idx, BOOL *stop) {
-        int32_t temp;
-        memcpy(&temp,value,sizeof(temp));
-        if (!_validationFunc(temp)) {
-            temp = kGPBUnrecognizedEnumeratorValue;
-        }
-        block(temp,idx,stop);
-    };
-    GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,block2);
+    GPBArrayHelper_enumerateValuesWithOptions(&_context,opts,(void (^)(void * value, NSUInteger idx, BOOL *stop))block,enumerateValuesWithOptionsEnum_Helper,_validationFunc);
 }
 
 

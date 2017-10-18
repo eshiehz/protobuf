@@ -177,7 +177,7 @@ static __attribute__ ((noinline)) NSMutableDictionary *copyWrappedValues(GPBType
   return dict;
 }
 
-static __attribute__ ((noinline)) void enumerateKeysUsingBlock(GPBType keyType,GPBType valueType, NSDictionary *dict, void (^block)(GPBGenericValue,GPBGenericValue,BOOL *),BOOL (*validationFunc)(int32_t)) {
+static __attribute__ ((noinline)) void enumerateKeysUsingBlock(GPBType keyType,GPBType valueType, NSDictionary *dict, void (^block)(void *,void *,BOOL *),void (*helperFunc)(GPBGenericValue,GPBGenericValue,BOOL *,void (^)(void *,void *,BOOL *)),BOOL (*validationFunc)(int32_t)) {
   BOOL stop = NO;
   NSEnumerator *keys = [dict keyEnumerator];
   NSNumber *aKey;
@@ -190,7 +190,8 @@ static __attribute__ ((noinline)) void enumerateKeysUsingBlock(GPBType keyType,G
     if (valueType == GPB_Enum && validationFunc && !validationFunc(unwrappedValue.valueEnum)) {
       unwrappedValue.valueEnum = kGPBUnrecognizedEnumeratorValue;
     }
-    block(unwrappedKey, unwrappedValue, &stop);
+    //block(unwrappedKey, unwrappedValue, &stop);
+    helperFunc(unwrappedKey,unwrappedValue,&stop,block);
     if (stop) {
       break;
     }
@@ -1144,13 +1145,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%  return (wrapped != NULL);
 //%}
 //%
+//%static void enumerateKeysAndEnumsHelper_##KEY_NAME##__##VALUE_NAME(
+//%    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+//%  void (^castBlock)(KEY_TYPE##KisP,VALUE_TYPE,BOOL *) = (void (^)(KEY_TYPE##KisP,VALUE_TYPE,BOOL *))block;
+//%  castBlock(key.value##KEY_NAME,value.value##VALUE_NAME,stop);
+//%}
 //%- (void)enumerateKeysAndEnumsUsingBlock:
 //%    (void (^)(KEY_TYPE KisP##key, VALUE_TYPE value, BOOL *stop))block {
-//%  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-//%
-//%    block(key.value##KEY_NAME, value.value##VALUE_NAME##, stop);
-//%  };
-//%  enumerateKeysUsingBlock(GPB_##KEY_NAME,GPB_##VALUE_NAME,_dictionary,block2,_validationFunc);
+//%  enumerateKeysUsingBlock(GPB_##KEY_NAME,GPB_##VALUE_NAME,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_##KEY_NAME##__##VALUE_NAME,_validationFunc);
 //%}
 //%
 //%DICTIONARY_MUTABLE_CORE2(KEY_NAME, KEY_TYPE, KisP, VALUE_NAME, VALUE_TYPE, KHELPER, VHELPER, Value, Enum, value, Raw)
@@ -1207,13 +1209,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
 //%  return _dictionary.count;
 //%}
 //%
+//%static void enumerateKeysAnd##ACCESSOR_NAME##Helper_##KEY_NAME##_##VALUE_NAME (
+//%    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+//%  void (^castBlock)(KEY_TYPE##KisP,VALUE_TYPE,BOOL *) = (void (^)(KEY_TYPE##KisP,VALUE_TYPE,BOOL *))block;
+//%  castBlock(key.value##KEY_NAME,value.value##VALUE_NAME,stop);
+//%}
 //%- (void)enumerateKeysAnd##ACCESSOR_NAME##VNAME##sUsingBlock:
 //%    (void (^)(KEY_TYPE KisP##key, VALUE_TYPE VNAME_VAR, BOOL *stop))block {
-//%  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-//%
-//%    block(key.value##KEY_NAME, value.value##VALUE_NAME, stop);
-//%  };
-//%  enumerateKeysUsingBlock(GPB_##KEY_NAME,GPB_##VALUE_NAME,_dictionary,block2,NULL);
+//%  enumerateKeysUsingBlock(GPB_##KEY_NAME,GPB_##VALUE_NAME,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAnd##ACCESSOR_NAME##Helper_##KEY_NAME##_##VALUE_NAME,NULL);
 //%}
 //%
 //%EXTRA_METHODS_##VHELPER(KEY_NAME, VALUE_NAME)- (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -1917,13 +1920,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_UInt32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,uint32_t,BOOL *) = (void (^)(uint32_t,uint32_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueUInt32,stop);
+}
 - (void)enumerateKeysAndUInt32sUsingBlock:
     (void (^)(uint32_t key, uint32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueUInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_UInt32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_UInt32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_UInt32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2087,13 +2091,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Int32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,int32_t,BOOL *) = (void (^)(uint32_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueInt32,stop);
+}
 - (void)enumerateKeysAndInt32sUsingBlock:
     (void (^)(uint32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Int32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Int32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Int32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2257,13 +2262,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_UInt64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,uint64_t,BOOL *) = (void (^)(uint32_t,uint64_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueUInt64,stop);
+}
 - (void)enumerateKeysAndUInt64sUsingBlock:
     (void (^)(uint32_t key, uint64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueUInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_UInt64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_UInt64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_UInt64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2427,13 +2433,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Int64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,int64_t,BOOL *) = (void (^)(uint32_t,int64_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueInt64,stop);
+}
 - (void)enumerateKeysAndInt64sUsingBlock:
     (void (^)(uint32_t key, int64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Int64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Int64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Int64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2597,13 +2604,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Bool (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,BOOL,BOOL *) = (void (^)(uint32_t,BOOL,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueBool,stop);
+}
 - (void)enumerateKeysAndBoolsUsingBlock:
     (void (^)(uint32_t key, BOOL value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueBool, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Bool,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Bool,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Bool,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2767,13 +2775,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Float (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,float,BOOL *) = (void (^)(uint32_t,float,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueFloat,stop);
+}
 - (void)enumerateKeysAndFloatsUsingBlock:
     (void (^)(uint32_t key, float value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueFloat, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Float,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Float,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Float,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -2937,13 +2946,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Double (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,double,BOOL *) = (void (^)(uint32_t,double,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueDouble,stop);
+}
 - (void)enumerateKeysAndDoublesUsingBlock:
     (void (^)(uint32_t key, double value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueDouble, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Double,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Double,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Double,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -3135,13 +3145,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndRawHelper_UInt32_Enum (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,int32_t,BOOL *) = (void (^)(uint32_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndRawValuesUsingBlock:
     (void (^)(uint32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Enum,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndRawHelper_UInt32_Enum,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -3199,13 +3210,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return (wrapped != NULL);
 }
 
+static void enumerateKeysAndEnumsHelper_UInt32__Enum(
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,int32_t,BOOL *) = (void (^)(uint32_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndEnumsUsingBlock:
     (void (^)(uint32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Enum,_dictionary,block2,_validationFunc);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_UInt32__Enum,_validationFunc);
 }
 
 - (void)addRawEntriesFromDictionary:(GPBUInt32EnumDictionary *)otherDictionary {
@@ -3351,13 +3363,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt32_Object (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint32_t,id,BOOL *) = (void (^)(uint32_t,id,BOOL *))block;
+  castBlock(key.valueUInt32,value.valueObject,stop);
+}
 - (void)enumerateKeysAndObjectsUsingBlock:
     (void (^)(uint32_t key, id object, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt32, value.valueObject, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt32,GPB_Object,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt32,GPB_Object,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt32_Object,NULL);
 }
 
 - (BOOL)isInitialized {
@@ -3549,13 +3562,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_UInt32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,uint32_t,BOOL *) = (void (^)(int32_t,uint32_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueUInt32,stop);
+}
 - (void)enumerateKeysAndUInt32sUsingBlock:
     (void (^)(int32_t key, uint32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueUInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_UInt32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_UInt32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_UInt32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -3719,13 +3733,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Int32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,int32_t,BOOL *) = (void (^)(int32_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueInt32,stop);
+}
 - (void)enumerateKeysAndInt32sUsingBlock:
     (void (^)(int32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Int32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Int32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Int32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -3889,13 +3904,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_UInt64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,uint64_t,BOOL *) = (void (^)(int32_t,uint64_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueUInt64,stop);
+}
 - (void)enumerateKeysAndUInt64sUsingBlock:
     (void (^)(int32_t key, uint64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueUInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_UInt64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_UInt64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_UInt64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4059,13 +4075,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Int64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,int64_t,BOOL *) = (void (^)(int32_t,int64_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueInt64,stop);
+}
 - (void)enumerateKeysAndInt64sUsingBlock:
     (void (^)(int32_t key, int64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Int64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Int64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Int64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4229,13 +4246,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Bool (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,BOOL,BOOL *) = (void (^)(int32_t,BOOL,BOOL *))block;
+  castBlock(key.valueInt32,value.valueBool,stop);
+}
 - (void)enumerateKeysAndBoolsUsingBlock:
     (void (^)(int32_t key, BOOL value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueBool, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Bool,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Bool,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Bool,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4399,13 +4417,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Float (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,float,BOOL *) = (void (^)(int32_t,float,BOOL *))block;
+  castBlock(key.valueInt32,value.valueFloat,stop);
+}
 - (void)enumerateKeysAndFloatsUsingBlock:
     (void (^)(int32_t key, float value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueFloat, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Float,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Float,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Float,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4569,13 +4588,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Double (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,double,BOOL *) = (void (^)(int32_t,double,BOOL *))block;
+  castBlock(key.valueInt32,value.valueDouble,stop);
+}
 - (void)enumerateKeysAndDoublesUsingBlock:
     (void (^)(int32_t key, double value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueDouble, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Double,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Double,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Double,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4767,13 +4787,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndRawHelper_Int32_Enum (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,int32_t,BOOL *) = (void (^)(int32_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndRawValuesUsingBlock:
     (void (^)(int32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Enum,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndRawHelper_Int32_Enum,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -4831,13 +4852,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return (wrapped != NULL);
 }
 
+static void enumerateKeysAndEnumsHelper_Int32__Enum(
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,int32_t,BOOL *) = (void (^)(int32_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt32,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndEnumsUsingBlock:
     (void (^)(int32_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Enum,_dictionary,block2,_validationFunc);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_Int32__Enum,_validationFunc);
 }
 
 - (void)addRawEntriesFromDictionary:(GPBInt32EnumDictionary *)otherDictionary {
@@ -4983,13 +5005,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int32_Object (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int32_t,id,BOOL *) = (void (^)(int32_t,id,BOOL *))block;
+  castBlock(key.valueInt32,value.valueObject,stop);
+}
 - (void)enumerateKeysAndObjectsUsingBlock:
     (void (^)(int32_t key, id object, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt32, value.valueObject, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int32,GPB_Object,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int32,GPB_Object,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int32_Object,NULL);
 }
 
 - (BOOL)isInitialized {
@@ -5181,13 +5204,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_UInt32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,uint32_t,BOOL *) = (void (^)(uint64_t,uint32_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueUInt32,stop);
+}
 - (void)enumerateKeysAndUInt32sUsingBlock:
     (void (^)(uint64_t key, uint32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueUInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_UInt32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_UInt32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_UInt32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -5351,13 +5375,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Int32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,int32_t,BOOL *) = (void (^)(uint64_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueInt32,stop);
+}
 - (void)enumerateKeysAndInt32sUsingBlock:
     (void (^)(uint64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Int32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Int32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Int32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -5521,13 +5546,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_UInt64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,uint64_t,BOOL *) = (void (^)(uint64_t,uint64_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueUInt64,stop);
+}
 - (void)enumerateKeysAndUInt64sUsingBlock:
     (void (^)(uint64_t key, uint64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueUInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_UInt64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_UInt64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_UInt64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -5691,13 +5717,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Int64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,int64_t,BOOL *) = (void (^)(uint64_t,int64_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueInt64,stop);
+}
 - (void)enumerateKeysAndInt64sUsingBlock:
     (void (^)(uint64_t key, int64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Int64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Int64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Int64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -5861,13 +5888,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Bool (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,BOOL,BOOL *) = (void (^)(uint64_t,BOOL,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueBool,stop);
+}
 - (void)enumerateKeysAndBoolsUsingBlock:
     (void (^)(uint64_t key, BOOL value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueBool, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Bool,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Bool,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Bool,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -6031,13 +6059,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Float (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,float,BOOL *) = (void (^)(uint64_t,float,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueFloat,stop);
+}
 - (void)enumerateKeysAndFloatsUsingBlock:
     (void (^)(uint64_t key, float value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueFloat, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Float,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Float,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Float,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -6201,13 +6230,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Double (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,double,BOOL *) = (void (^)(uint64_t,double,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueDouble,stop);
+}
 - (void)enumerateKeysAndDoublesUsingBlock:
     (void (^)(uint64_t key, double value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueDouble, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Double,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Double,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Double,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -6399,13 +6429,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndRawHelper_UInt64_Enum (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,int32_t,BOOL *) = (void (^)(uint64_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndRawValuesUsingBlock:
     (void (^)(uint64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Enum,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndRawHelper_UInt64_Enum,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -6463,13 +6494,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return (wrapped != NULL);
 }
 
+static void enumerateKeysAndEnumsHelper_UInt64__Enum(
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,int32_t,BOOL *) = (void (^)(uint64_t,int32_t,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndEnumsUsingBlock:
     (void (^)(uint64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Enum,_dictionary,block2,_validationFunc);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_UInt64__Enum,_validationFunc);
 }
 
 - (void)addRawEntriesFromDictionary:(GPBUInt64EnumDictionary *)otherDictionary {
@@ -6615,13 +6647,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_UInt64_Object (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(uint64_t,id,BOOL *) = (void (^)(uint64_t,id,BOOL *))block;
+  castBlock(key.valueUInt64,value.valueObject,stop);
+}
 - (void)enumerateKeysAndObjectsUsingBlock:
     (void (^)(uint64_t key, id object, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueUInt64, value.valueObject, stop);
-  };
-  enumerateKeysUsingBlock(GPB_UInt64,GPB_Object,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_UInt64,GPB_Object,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_UInt64_Object,NULL);
 }
 
 - (BOOL)isInitialized {
@@ -6813,13 +6846,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_UInt32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,uint32_t,BOOL *) = (void (^)(int64_t,uint32_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueUInt32,stop);
+}
 - (void)enumerateKeysAndUInt32sUsingBlock:
     (void (^)(int64_t key, uint32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueUInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_UInt32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_UInt32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_UInt32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -6983,13 +7017,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Int32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,int32_t,BOOL *) = (void (^)(int64_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueInt32,stop);
+}
 - (void)enumerateKeysAndInt32sUsingBlock:
     (void (^)(int64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Int32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Int32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Int32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -7153,13 +7188,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_UInt64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,uint64_t,BOOL *) = (void (^)(int64_t,uint64_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueUInt64,stop);
+}
 - (void)enumerateKeysAndUInt64sUsingBlock:
     (void (^)(int64_t key, uint64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueUInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_UInt64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_UInt64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_UInt64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -7323,13 +7359,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Int64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,int64_t,BOOL *) = (void (^)(int64_t,int64_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueInt64,stop);
+}
 - (void)enumerateKeysAndInt64sUsingBlock:
     (void (^)(int64_t key, int64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Int64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Int64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Int64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -7493,13 +7530,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Bool (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,BOOL,BOOL *) = (void (^)(int64_t,BOOL,BOOL *))block;
+  castBlock(key.valueInt64,value.valueBool,stop);
+}
 - (void)enumerateKeysAndBoolsUsingBlock:
     (void (^)(int64_t key, BOOL value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueBool, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Bool,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Bool,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Bool,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -7663,13 +7701,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Float (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,float,BOOL *) = (void (^)(int64_t,float,BOOL *))block;
+  castBlock(key.valueInt64,value.valueFloat,stop);
+}
 - (void)enumerateKeysAndFloatsUsingBlock:
     (void (^)(int64_t key, float value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueFloat, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Float,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Float,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Float,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -7833,13 +7872,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Double (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,double,BOOL *) = (void (^)(int64_t,double,BOOL *))block;
+  castBlock(key.valueInt64,value.valueDouble,stop);
+}
 - (void)enumerateKeysAndDoublesUsingBlock:
     (void (^)(int64_t key, double value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueDouble, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Double,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Double,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Double,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -8031,13 +8071,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndRawHelper_Int64_Enum (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,int32_t,BOOL *) = (void (^)(int64_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndRawValuesUsingBlock:
     (void (^)(int64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Enum,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndRawHelper_Int64_Enum,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -8095,13 +8136,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return (wrapped != NULL);
 }
 
+static void enumerateKeysAndEnumsHelper_Int64__Enum(
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,int32_t,BOOL *) = (void (^)(int64_t,int32_t,BOOL *))block;
+  castBlock(key.valueInt64,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndEnumsUsingBlock:
     (void (^)(int64_t key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Enum,_dictionary,block2,_validationFunc);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_Int64__Enum,_validationFunc);
 }
 
 - (void)addRawEntriesFromDictionary:(GPBInt64EnumDictionary *)otherDictionary {
@@ -8247,13 +8289,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_Int64_Object (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(int64_t,id,BOOL *) = (void (^)(int64_t,id,BOOL *))block;
+  castBlock(key.valueInt64,value.valueObject,stop);
+}
 - (void)enumerateKeysAndObjectsUsingBlock:
     (void (^)(int64_t key, id object, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueInt64, value.valueObject, stop);
-  };
-  enumerateKeysUsingBlock(GPB_Int64,GPB_Object,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_Int64,GPB_Object,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_Int64_Object,NULL);
 }
 
 - (BOOL)isInitialized {
@@ -8445,13 +8488,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_UInt32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,uint32_t,BOOL *) = (void (^)(NSString*,uint32_t,BOOL *))block;
+  castBlock(key.valueString,value.valueUInt32,stop);
+}
 - (void)enumerateKeysAndUInt32sUsingBlock:
     (void (^)(NSString *key, uint32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueUInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_UInt32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_UInt32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_UInt32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -8619,13 +8663,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_Int32 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,int32_t,BOOL *) = (void (^)(NSString*,int32_t,BOOL *))block;
+  castBlock(key.valueString,value.valueInt32,stop);
+}
 - (void)enumerateKeysAndInt32sUsingBlock:
     (void (^)(NSString *key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueInt32, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Int32,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Int32,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_Int32,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -8793,13 +8838,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_UInt64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,uint64_t,BOOL *) = (void (^)(NSString*,uint64_t,BOOL *))block;
+  castBlock(key.valueString,value.valueUInt64,stop);
+}
 - (void)enumerateKeysAndUInt64sUsingBlock:
     (void (^)(NSString *key, uint64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueUInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_UInt64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_UInt64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_UInt64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -8967,13 +9013,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_Int64 (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,int64_t,BOOL *) = (void (^)(NSString*,int64_t,BOOL *))block;
+  castBlock(key.valueString,value.valueInt64,stop);
+}
 - (void)enumerateKeysAndInt64sUsingBlock:
     (void (^)(NSString *key, int64_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueInt64, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Int64,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Int64,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_Int64,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -9141,13 +9188,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_Bool (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,BOOL,BOOL *) = (void (^)(NSString*,BOOL,BOOL *))block;
+  castBlock(key.valueString,value.valueBool,stop);
+}
 - (void)enumerateKeysAndBoolsUsingBlock:
     (void (^)(NSString *key, BOOL value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueBool, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Bool,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Bool,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_Bool,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -9315,13 +9363,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_Float (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,float,BOOL *) = (void (^)(NSString*,float,BOOL *))block;
+  castBlock(key.valueString,value.valueFloat,stop);
+}
 - (void)enumerateKeysAndFloatsUsingBlock:
     (void (^)(NSString *key, float value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueFloat, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Float,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Float,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_Float,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -9489,13 +9538,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndHelper_String_Double (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,double,BOOL *) = (void (^)(NSString*,double,BOOL *))block;
+  castBlock(key.valueString,value.valueDouble,stop);
+}
 - (void)enumerateKeysAndDoublesUsingBlock:
     (void (^)(NSString *key, double value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueDouble, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Double,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Double,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndHelper_String_Double,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -9691,13 +9741,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return _dictionary.count;
 }
 
+static void enumerateKeysAndRawHelper_String_Enum (
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,int32_t,BOOL *) = (void (^)(NSString*,int32_t,BOOL *))block;
+  castBlock(key.valueString,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndRawValuesUsingBlock:
     (void (^)(NSString *key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Enum,_dictionary,block2,NULL);
+  enumerateKeysUsingBlock(GPB_String,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndRawHelper_String_Enum,NULL);
 }
 
 - (size_t)computeSerializedSizeAsField:(GPBFieldDescriptor *)field {
@@ -9755,13 +9806,14 @@ void GPBDictionaryReadEntry(id mapDictionary,
   return (wrapped != NULL);
 }
 
+static void enumerateKeysAndEnumsHelper_String__Enum(
+    GPBGenericValue key,GPBGenericValue value,BOOL *stop,void (^block)(void *,void *,BOOL *)) {
+  void (^castBlock)(NSString*,int32_t,BOOL *) = (void (^)(NSString*,int32_t,BOOL *))block;
+  castBlock(key.valueString,value.valueEnum,stop);
+}
 - (void)enumerateKeysAndEnumsUsingBlock:
     (void (^)(NSString *key, int32_t value, BOOL *stop))block {
-  void (^block2)(GPBGenericValue key,GPBGenericValue value,BOOL *stop) = ^(GPBGenericValue key,GPBGenericValue value,BOOL *stop) {
-
-    block(key.valueString, value.valueEnum, stop);
-  };
-  enumerateKeysUsingBlock(GPB_String,GPB_Enum,_dictionary,block2,_validationFunc);
+  enumerateKeysUsingBlock(GPB_String,GPB_Enum,_dictionary,(void (^)(void *,void *,BOOL *))block,enumerateKeysAndEnumsHelper_String__Enum,_validationFunc);
 }
 
 - (void)addRawEntriesFromDictionary:(GPBStringEnumDictionary *)otherDictionary {
